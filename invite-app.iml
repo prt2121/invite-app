@@ -13,10 +13,18 @@
         <CLASSES>
           <root url="kotlin-js-meta://$KOTLIN_BUNDLED$/lib/kotlin-jslib.jar!/" />
           <root url="kotlin-js-meta://$KOTLIN_BUNDLED$/lib/kotlin-jslib.jar!/" />
+          <root url="kotlin-js-meta://$KOTLIN_BUNDLED$/lib/kotlin-jslib.jar!/" />
+          <root url="kotlin-js-meta://$KOTLIN_BUNDLED$/lib/kotlin-jslib.jar!/" />
           <root url="kotlin-js-meta://$MODULE_DIR$/lib/Yested-0.0.98.jar!/" />
+          <root url="kotlin-js-meta://$MODULE_DIR$/lib/Yested-0.0.98.jar!/" />
+          <root url="kotlin-js-meta://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.0.1/jackson-databind-2.0.1.jar!/" />
+          <root url="kotlin-js-meta://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.0.1/jackson-annotations-2.0.1.jar!/" />
+          <root url="kotlin-js-meta://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.0.1/jackson-core-2.0.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
+          <root url="jar://$KOTLIN_BUNDLED$/lib/kotlin-jslib-sources.jar!/" />
+          <root url="jar://$KOTLIN_BUNDLED$/lib/kotlin-jslib-sources.jar!/" />
           <root url="jar://$KOTLIN_BUNDLED$/lib/kotlin-jslib-sources.jar!/" />
           <root url="jar://$KOTLIN_BUNDLED$/lib/kotlin-jslib-sources.jar!/" />
         </SOURCES>
