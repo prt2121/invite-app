@@ -8,7 +8,6 @@ import net.yested.Div
 import net.yested.bootstrap.Medium
 import net.yested.bootstrap.ButtonLook
 import net.yested.bootstrap.btsButton
-import kotlin.browser.window
 import net.yested.bootstrap.aligned
 import net.yested.bootstrap.TextAlign
 
@@ -28,26 +27,28 @@ fun createInfoDiv(url: String): Div {
   ajaxGet<Invite>(url) {
     invite ->
     // now invite is not type 'Invite'
+    println("id ${invite.from._id}")
+    val resourceUrl = "https://intense-waters-9652.herokuapp.com/invites/${invite.from._id}"
     val template = """
                       {
                         "from": {
                           "firstName": "${invite.from.firstName}",
                           "lastName": "${invite.from.lastName}",
                           "phoneNumber": "${invite.from.phoneNumber}",
-                          "_id": "${invite.from.id}"
+                          "_id": "${invite.from._id}"
                         },
                         "to": {
                           "firstName": "${invite.to.firstName}",
                           "lastName": "${invite.to.lastName}",
                           "phoneNumber": "${invite.to.phoneNumber}",
-                          "_id": "${invite.to.id}"
+                          "_id": "${invite.to._id}"
                         },
                         "destinationLatLng": "${invite.destinationLatLng}",
                         "destinationAddress": "${invite.destinationAddress}",
                         "message": "${invite.message}",
                         "status": "PENDING",
                         "pickupAddress": "",
-                        "_id": "${invite.id}"
+                        "_id": "${invite._id}"
                       }
                   """
 
@@ -81,7 +82,15 @@ fun createInfoDiv(url: String): Div {
                     type = ButtonType.BUTTON,
                     label = { +"Reject" },
                     onclick = {
-                      println("Reject!")
+                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"REJECT\"")
+                      ajaxPost<Invite>(
+                          AjaxRequest(url = resourceUrl,
+                              type = "PUT",
+                              data = data) {
+                            println("ajaxPost id : ${it._id}")
+                            println("ajaxPost status : ${it.status}")
+                          }
+                      )
                     })
                 nbsp()
                 btsButton(
@@ -89,14 +98,13 @@ fun createInfoDiv(url: String): Div {
                     label = { +"Accept" },
                     look = ButtonLook.SUCCESS,
                     onclick = {
-
-                      println("inviteJson : $template")
-                      println("id : ${extractId(window.location.href)}")
+                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"ACCEPT\"")
                       ajaxPost<Invite>(
-                          AjaxRequest(url = "http://localhost:8080/invites/${extractId(window.location.href)}",
+                          AjaxRequest(url = resourceUrl,
                               type = "PUT",
-                              data = template) {
-                            println("ajaxPost : ${it.status}")
+                              data = data) {
+                            println("ajaxPost id : ${it._id}")
+                            println("ajaxPost status : ${it.status}")
                           }
                       )
                     })

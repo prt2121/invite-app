@@ -4,7 +4,7 @@ package prat
  * Created by pt2121 on 12/8/15.
  */
 data class Invite(
-    val id: String,
+    val _id: String,
     val from: User,
     val to: User,
     val destinationLatLng: String,
@@ -18,7 +18,7 @@ enum class Status {
 }
 
 data class User(
-    val id: String,
+    val _id: String,
     val firstName: String,
     val lastName: String,
     val phoneNumber: String)

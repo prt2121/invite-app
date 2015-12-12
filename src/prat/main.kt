@@ -44,7 +44,7 @@ class ContentDiv : Component {
   override val element: HTMLElement = (Div() with {
     row {
       col(Medium(12)) {
-        +createInfoDiv("http://localhost:8080/invites/${extractId(window.location.href)}")
+        +createInfoDiv("https://intense-waters-9652.herokuapp.com/invites/${extractId(window.location.href)}")
       }
     }
   }).element
