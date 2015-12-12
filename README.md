@@ -1,3 +1,3 @@
-### [invite-app](index.html)
+### [invite-app](app.html)
 
 front-end in Kotlin
