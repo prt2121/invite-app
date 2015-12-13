@@ -34,21 +34,19 @@ fun createInfoDiv(url: String): Div {
   ajaxGet<Invite>(url) {
     invite ->
     // now invite is not type 'Invite'
-    println("id ${invite.from._id}")
-    val resourceUrl = "https://intense-waters-9652.herokuapp.com/invites/${invite.from._id}"
+    println("id ${invite._id}")
+    val resourceUrl = "https://intense-waters-9652.herokuapp.com/invites/${invite._id}"
     val template = """
                       {
                         "from": {
                           "firstName": "${invite.from.firstName}",
                           "lastName": "${invite.from.lastName}",
-                          "phoneNumber": "${invite.from.phoneNumber}",
-                          "_id": "${invite.from._id}"
+                          "phoneNumber": "${invite.from.phoneNumber}"
                         },
                         "to": {
                           "firstName": "${invite.to.firstName}",
                           "lastName": "${invite.to.lastName}",
-                          "phoneNumber": "${invite.to.phoneNumber}",
-                          "_id": "${invite.to._id}"
+                          "phoneNumber": "${invite.to.phoneNumber}"
                         },
                         "destinationLatLng": "${invite.destinationLatLng}",
                         "destinationAddress": "${invite.destinationAddress}",
