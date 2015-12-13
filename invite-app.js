@@ -126,9 +126,9 @@
       },
       createInfoDiv_61zpoe$f_1: function (placeholder, position) {
         return function (invite) {
-          Kotlin.println('id ' + invite.from._id);
-          var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite.from._id;
-          var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.from._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.to._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                  ';
+          Kotlin.println('id ' + invite._id);
+          var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite._id;
+          var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                  ';
           placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_19(invite, template, resourceUrl, position)));
         };
       },
@@ -207,40 +207,35 @@
           CANCEL: new _.prat.Status()
         };
       }),
-      User: Kotlin.createClass(null, function (_id, firstName, lastName, phoneNumber) {
-        this._id = _id;
+      User: Kotlin.createClass(null, function (firstName, lastName, phoneNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
       }, /** @lends _.prat.User.prototype */ {
         component1: function () {
-          return this._id;
-        },
-        component2: function () {
           return this.firstName;
         },
-        component3: function () {
+        component2: function () {
           return this.lastName;
         },
-        component4: function () {
+        component3: function () {
           return this.phoneNumber;
         },
-        copy_w74nik$: function (_id, firstName, lastName, phoneNumber) {
-          return new _.prat.User(_id === void 0 ? this._id : _id, firstName === void 0 ? this.firstName : firstName, lastName === void 0 ? this.lastName : lastName, phoneNumber === void 0 ? this.phoneNumber : phoneNumber);
+        copy_6hosri$: function (firstName, lastName, phoneNumber) {
+          return new _.prat.User(firstName === void 0 ? this.firstName : firstName, lastName === void 0 ? this.lastName : lastName, phoneNumber === void 0 ? this.phoneNumber : phoneNumber);
         },
         toString: function () {
-          return 'User(_id=' + Kotlin.toString(this._id) + (', firstName=' + Kotlin.toString(this.firstName)) + (', lastName=' + Kotlin.toString(this.lastName)) + (', phoneNumber=' + Kotlin.toString(this.phoneNumber)) + ')';
+          return 'User(firstName=' + Kotlin.toString(this.firstName) + (', lastName=' + Kotlin.toString(this.lastName)) + (', phoneNumber=' + Kotlin.toString(this.phoneNumber)) + ')';
         },
         hashCode: function () {
           var result = 0;
-          result = result * 31 + Kotlin.hashCode(this._id) | 0;
           result = result * 31 + Kotlin.hashCode(this.firstName) | 0;
           result = result * 31 + Kotlin.hashCode(this.lastName) | 0;
           result = result * 31 + Kotlin.hashCode(this.phoneNumber) | 0;
           return result;
         },
         equals_za3rmp$: function (other) {
-          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this._id, other._id) && Kotlin.equals(this.firstName, other.firstName) && Kotlin.equals(this.lastName, other.lastName) && Kotlin.equals(this.phoneNumber, other.phoneNumber)))));
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.firstName, other.firstName) && Kotlin.equals(this.lastName, other.lastName) && Kotlin.equals(this.phoneNumber, other.phoneNumber)))));
         }
       }),
       Row: Kotlin.createClass(function () {
