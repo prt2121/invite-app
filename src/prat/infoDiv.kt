@@ -25,7 +25,7 @@ fun createInfoDiv(url: String): Div {
       br();br();br();br();br();br();br()
       spinner(SpinnerOptions(scale = 0.25f))
       aligned(align = TextAlign.CENTER) {
-        +"Fetching message..."
+        +"Loading..."
       }
     }
   }
@@ -71,8 +71,10 @@ fun createInfoDiv(url: String): Div {
           br()
           row {
             h4 {
-              aligned(align = TextAlign.CENTER) {
-                +invite.message
+              em {
+                aligned(align = TextAlign.CENTER) {
+                  +"\"${invite.message}\""
+                }
               }
             }
           }
