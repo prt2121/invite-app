@@ -9,7 +9,7 @@
         };
       },
       f: function () {
-        this.unaryPlus_pdl1w0$('Fetching message...');
+        this.unaryPlus_pdl1w0$('Loading...');
       },
       f_0: function () {
         this.br();
@@ -42,7 +42,7 @@
       },
       f_4: function (invite) {
         return function () {
-          this.unaryPlus_pdl1w0$(invite.message);
+          this.unaryPlus_pdl1w0$('"' + invite.message + '"');
         };
       },
       f_5: function (invite) {
@@ -50,73 +50,78 @@
           Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_4(invite));
         };
       },
-      f_6: function (invite, this$) {
+      f_6: function (invite) {
         return function () {
-          this$.h4_6csr66$(_.prat.f_5(invite));
+          this.em_6csr66$(_.prat.f_5(invite));
         };
       },
-      f_7: function (invite) {
+      f_7: function (invite, this$) {
+        return function () {
+          this$.h4_6csr66$(_.prat.f_6(invite));
+        };
+      },
+      f_8: function (invite) {
         return function () {
           this.unaryPlus_pdl1w0$('Destination: ' + invite.destinationAddress);
         };
       },
-      f_8: function (invite, this$) {
+      f_9: function (invite, this$) {
         return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_7(invite));
+          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_8(invite));
         };
       },
-      f_9: function () {
+      f_10: function () {
         this.unaryPlus_pdl1w0$('Reject');
       },
-      f_10: function (it) {
+      f_11: function (it) {
         Kotlin.println('ajaxPost id : ' + it._id);
         Kotlin.println('ajaxPost status : ' + it.status);
       },
-      f_11: function (template, resourceUrl) {
+      f_12: function (template, resourceUrl) {
         return function (it) {
           var data = template.replace('"status": "PENDING"', '"status": "REJECT"');
-          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_10));
+          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_11));
         };
       },
-      f_12: function () {
+      f_13: function () {
         this.unaryPlus_pdl1w0$('Accept');
       },
-      f_13: function (it) {
+      f_14: function (it) {
         Kotlin.println('ajaxPost id : ' + it._id);
         Kotlin.println('ajaxPost status : ' + it.status);
       },
-      f_14: function (template, position, resourceUrl) {
+      f_15: function (template, position, resourceUrl) {
         return function (it) {
           var data = template.replace('"status": "PENDING"', '"status": "ACCEPT"').replace('"pickupAddress": ""', '"' + 'pickupAddress' + '"' + ': ' + '"' + position.v + '"');
           Kotlin.println('Accept : ' + position.v);
-          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_13));
-        };
-      },
-      f_15: function (template, resourceUrl, position) {
-        return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_9, void 0, void 0, void 0, void 0, _.prat.f_11(template, resourceUrl));
-          this.nbsp_za3lpa$();
-          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_12, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_14(template, position, resourceUrl));
+          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_14));
         };
       },
       f_16: function (template, resourceUrl, position) {
         return function () {
-          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_15(template, resourceUrl, position)));
+          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_10, void 0, void 0, void 0, void 0, _.prat.f_12(template, resourceUrl));
+          this.nbsp_za3lpa$();
+          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_13, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_15(template, position, resourceUrl));
         };
       },
-      f_17: function (template, resourceUrl, position, this$) {
+      f_17: function (template, resourceUrl, position) {
         return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_16(template, resourceUrl, position));
+          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_16(template, resourceUrl, position)));
         };
       },
-      f_18: function (invite, template, resourceUrl, position) {
+      f_18: function (template, resourceUrl, position, this$) {
+        return function () {
+          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_17(template, resourceUrl, position));
+        };
+      },
+      f_19: function (invite, template, resourceUrl, position) {
         return function () {
           _.prat.row_yqo6f9$(this, _.prat.f_3(invite));
           this.br();
-          _.prat.row_yqo6f9$(this, _.prat.f_6(invite, this));
+          _.prat.row_yqo6f9$(this, _.prat.f_7(invite, this));
           this.br();
-          _.prat.row_yqo6f9$(this, _.prat.f_8(invite, this));
-          _.prat.row_yqo6f9$(this, _.prat.f_17(template, resourceUrl, position, this));
+          _.prat.row_yqo6f9$(this, _.prat.f_9(invite, this));
+          _.prat.row_yqo6f9$(this, _.prat.f_18(template, resourceUrl, position, this));
         };
       },
       createInfoDiv_61zpoe$f_1: function (placeholder, position) {
@@ -124,7 +129,7 @@
           Kotlin.println('id ' + invite.from._id);
           var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite.from._id;
           var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.from._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.to._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                  ';
-          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_18(invite, template, resourceUrl, position)));
+          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_19(invite, template, resourceUrl, position)));
         };
       },
       createInfoDiv_61zpoe$: function (url) {
@@ -409,15 +414,15 @@
           console.log('NO geo');
         }
       },
-      f_19: function () {
+      f_20: function () {
         this.unaryPlus_pdl1w0$('Summon');
       },
       main_kand9s$f: function () {
-        this.brand_75yags$('#', _.prat.f_19);
+        this.brand_75yags$('#', _.prat.f_20);
       },
       main_kand9s$f_0: function () {
       },
-      f_20: function (divContainer) {
+      f_21: function (divContainer) {
         return function () {
           this.br();
           this.br();
@@ -426,15 +431,15 @@
           this.unaryPlus_pv6laa$(divContainer);
         };
       },
-      f_21: function (divContainer) {
+      f_22: function (divContainer) {
         return function () {
-          this.div_kb10gb$(void 0, void 0, _.prat.f_20(divContainer));
+          this.div_kb10gb$(void 0, void 0, _.prat.f_21(divContainer));
         };
       },
       main_kand9s$f_1: function (navbar, divContainer) {
         return function () {
           this.topMenu_tx5hdt$(navbar);
-          this.content_6csr66$(_.prat.f_21(divContainer));
+          this.content_6csr66$(_.prat.f_22(divContainer));
         };
       },
       main_kand9s$: function (args) {
