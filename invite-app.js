@@ -2,6 +2,12 @@
   'use strict';
   var _ = Kotlin.defineRootPackage(null, /** @lends _ */ {
     prat: Kotlin.definePackage(null, /** @lends _.prat */ {
+      createInfoDiv_61zpoe$f: function (position) {
+        return function (it) {
+          Kotlin.println('lat ' + it.coords.latitude + ' long ' + it.coords.longitude);
+          position.v = it.coords.latitude + ',' + it.coords.longitude;
+        };
+      },
       f: function () {
         this.unaryPlus_pdl1w0$('Fetching message...');
       },
@@ -16,7 +22,7 @@
         _.prat.spinner_4wh9n3$(this, new _.prat.SpinnerOptions(void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, 0.25));
         Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f);
       },
-      createInfoDiv_61zpoe$f: function () {
+      createInfoDiv_61zpoe$f_0: function () {
         this.div_kb10gb$(void 0, void 0, _.prat.f_0);
       },
       f_1: function (invite) {
@@ -63,61 +69,73 @@
         this.unaryPlus_pdl1w0$('Reject');
       },
       f_10: function (it) {
-        Kotlin.println('Reject!');
+        Kotlin.println('ajaxPost id : ' + it._id);
+        Kotlin.println('ajaxPost status : ' + it.status);
       },
-      f_11: function () {
+      f_11: function (template, resourceUrl) {
+        return function (it) {
+          var data = template.replace('"status": "PENDING"', '"status": "REJECT"');
+          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_10));
+        };
+      },
+      f_12: function () {
         this.unaryPlus_pdl1w0$('Accept');
       },
-      f_12: function (it) {
-        Kotlin.println('ajaxPost : ' + it.status);
+      f_13: function (it) {
+        Kotlin.println('ajaxPost id : ' + it._id);
+        Kotlin.println('ajaxPost status : ' + it.status);
       },
-      f_13: function (template) {
+      f_14: function (template, position, resourceUrl) {
         return function (it) {
-          Kotlin.println('inviteJson : ' + template);
-          Kotlin.println('id : ' + Kotlin.toString(_.prat.extractId_61zpoe$(window.location.href)));
-          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest('http://localhost:8080/invites/' + Kotlin.toString(_.prat.extractId_61zpoe$(window.location.href)), 'PUT', template, void 0, void 0, _.prat.f_12));
+          var data = template.replace('"status": "PENDING"', '"status": "ACCEPT"').replace('"pickupAddress": ""', '"' + 'pickupAddress' + '"' + ': ' + '"' + position.v + '"');
+          Kotlin.println('Accept : ' + position.v);
+          Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_13));
         };
       },
-      f_14: function (template) {
+      f_15: function (template, resourceUrl, position) {
         return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_9, void 0, void 0, void 0, void 0, _.prat.f_10);
+          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_9, void 0, void 0, void 0, void 0, _.prat.f_11(template, resourceUrl));
           this.nbsp_za3lpa$();
-          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_11, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_13(template));
+          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_12, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_14(template, position, resourceUrl));
         };
       },
-      f_15: function (template) {
+      f_16: function (template, resourceUrl, position) {
         return function () {
-          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_14(template)));
+          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_15(template, resourceUrl, position)));
         };
       },
-      f_16: function (template, this$) {
+      f_17: function (template, resourceUrl, position, this$) {
         return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_15(template));
+          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_16(template, resourceUrl, position));
         };
       },
-      f_17: function (invite, template) {
+      f_18: function (invite, template, resourceUrl, position) {
         return function () {
           _.prat.row_yqo6f9$(this, _.prat.f_3(invite));
           this.br();
           _.prat.row_yqo6f9$(this, _.prat.f_6(invite, this));
           this.br();
           _.prat.row_yqo6f9$(this, _.prat.f_8(invite, this));
-          _.prat.row_yqo6f9$(this, _.prat.f_16(template, this));
+          _.prat.row_yqo6f9$(this, _.prat.f_17(template, resourceUrl, position, this));
         };
       },
-      createInfoDiv_61zpoe$f_0: function (placeholder) {
+      createInfoDiv_61zpoe$f_1: function (placeholder, position) {
         return function (invite) {
-          var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.from.id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.to.id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite.id + '"' + '\n' + '                      }' + '\n' + '                  ';
-          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_17(invite, template)));
+          Kotlin.println('id ' + invite.from._id);
+          var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite.from._id;
+          var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.from._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.to._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                  ';
+          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_18(invite, template, resourceUrl, position)));
         };
       },
       createInfoDiv_61zpoe$: function (url) {
-        var placeholder = Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.createInfoDiv_61zpoe$f);
-        Kotlin.modules['Yested'].net.yested.ajaxGet_435vpa$(url, _.prat.createInfoDiv_61zpoe$f_0(placeholder));
+        var position = {v: ''};
+        _.prat.locate_puvnrn$(_.prat.createInfoDiv_61zpoe$f(position));
+        var placeholder = Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.createInfoDiv_61zpoe$f_0);
+        Kotlin.modules['Yested'].net.yested.ajaxGet_435vpa$(url, _.prat.createInfoDiv_61zpoe$f_1(placeholder, position));
         return placeholder;
       },
-      Invite: Kotlin.createClass(null, function (id, from, to, destinationLatLng, destinationAddress, message, status, pickupAddress) {
-        this.id = id;
+      Invite: Kotlin.createClass(null, function (_id, from, to, destinationLatLng, destinationAddress, message, status, pickupAddress) {
+        this._id = _id;
         this.from = from;
         this.to = to;
         this.destinationLatLng = destinationLatLng;
@@ -127,7 +145,7 @@
         this.pickupAddress = pickupAddress;
       }, /** @lends _.prat.Invite.prototype */ {
         component1: function () {
-          return this.id;
+          return this._id;
         },
         component2: function () {
           return this.from;
@@ -150,15 +168,15 @@
         component8: function () {
           return this.pickupAddress;
         },
-        copy_in9lfv$: function (id, from, to, destinationLatLng, destinationAddress, message, status, pickupAddress) {
-          return new _.prat.Invite(id === void 0 ? this.id : id, from === void 0 ? this.from : from, to === void 0 ? this.to : to, destinationLatLng === void 0 ? this.destinationLatLng : destinationLatLng, destinationAddress === void 0 ? this.destinationAddress : destinationAddress, message === void 0 ? this.message : message, status === void 0 ? this.status : status, pickupAddress === void 0 ? this.pickupAddress : pickupAddress);
+        copy_in9lfv$: function (_id, from, to, destinationLatLng, destinationAddress, message, status, pickupAddress) {
+          return new _.prat.Invite(_id === void 0 ? this._id : _id, from === void 0 ? this.from : from, to === void 0 ? this.to : to, destinationLatLng === void 0 ? this.destinationLatLng : destinationLatLng, destinationAddress === void 0 ? this.destinationAddress : destinationAddress, message === void 0 ? this.message : message, status === void 0 ? this.status : status, pickupAddress === void 0 ? this.pickupAddress : pickupAddress);
         },
         toString: function () {
-          return 'Invite(id=' + Kotlin.toString(this.id) + (', from=' + Kotlin.toString(this.from)) + (', to=' + Kotlin.toString(this.to)) + (', destinationLatLng=' + Kotlin.toString(this.destinationLatLng)) + (', destinationAddress=' + Kotlin.toString(this.destinationAddress)) + (', message=' + Kotlin.toString(this.message)) + (', status=' + Kotlin.toString(this.status)) + (', pickupAddress=' + Kotlin.toString(this.pickupAddress)) + ')';
+          return 'Invite(_id=' + Kotlin.toString(this._id) + (', from=' + Kotlin.toString(this.from)) + (', to=' + Kotlin.toString(this.to)) + (', destinationLatLng=' + Kotlin.toString(this.destinationLatLng)) + (', destinationAddress=' + Kotlin.toString(this.destinationAddress)) + (', message=' + Kotlin.toString(this.message)) + (', status=' + Kotlin.toString(this.status)) + (', pickupAddress=' + Kotlin.toString(this.pickupAddress)) + ')';
         },
         hashCode: function () {
           var result = 0;
-          result = result * 31 + Kotlin.hashCode(this.id) | 0;
+          result = result * 31 + Kotlin.hashCode(this._id) | 0;
           result = result * 31 + Kotlin.hashCode(this.from) | 0;
           result = result * 31 + Kotlin.hashCode(this.to) | 0;
           result = result * 31 + Kotlin.hashCode(this.destinationLatLng) | 0;
@@ -169,7 +187,7 @@
           return result;
         },
         equals_za3rmp$: function (other) {
-          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.id, other.id) && Kotlin.equals(this.from, other.from) && Kotlin.equals(this.to, other.to) && Kotlin.equals(this.destinationLatLng, other.destinationLatLng) && Kotlin.equals(this.destinationAddress, other.destinationAddress) && Kotlin.equals(this.message, other.message) && Kotlin.equals(this.status, other.status) && Kotlin.equals(this.pickupAddress, other.pickupAddress)))));
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this._id, other._id) && Kotlin.equals(this.from, other.from) && Kotlin.equals(this.to, other.to) && Kotlin.equals(this.destinationLatLng, other.destinationLatLng) && Kotlin.equals(this.destinationAddress, other.destinationAddress) && Kotlin.equals(this.message, other.message) && Kotlin.equals(this.status, other.status) && Kotlin.equals(this.pickupAddress, other.pickupAddress)))));
         }
       }),
       Status: Kotlin.createEnumClass(function () {
@@ -184,14 +202,14 @@
           CANCEL: new _.prat.Status()
         };
       }),
-      User: Kotlin.createClass(null, function (id, firstName, lastName, phoneNumber) {
-        this.id = id;
+      User: Kotlin.createClass(null, function (_id, firstName, lastName, phoneNumber) {
+        this._id = _id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
       }, /** @lends _.prat.User.prototype */ {
         component1: function () {
-          return this.id;
+          return this._id;
         },
         component2: function () {
           return this.firstName;
@@ -202,22 +220,22 @@
         component4: function () {
           return this.phoneNumber;
         },
-        copy_w74nik$: function (id, firstName, lastName, phoneNumber) {
-          return new _.prat.User(id === void 0 ? this.id : id, firstName === void 0 ? this.firstName : firstName, lastName === void 0 ? this.lastName : lastName, phoneNumber === void 0 ? this.phoneNumber : phoneNumber);
+        copy_w74nik$: function (_id, firstName, lastName, phoneNumber) {
+          return new _.prat.User(_id === void 0 ? this._id : _id, firstName === void 0 ? this.firstName : firstName, lastName === void 0 ? this.lastName : lastName, phoneNumber === void 0 ? this.phoneNumber : phoneNumber);
         },
         toString: function () {
-          return 'User(id=' + Kotlin.toString(this.id) + (', firstName=' + Kotlin.toString(this.firstName)) + (', lastName=' + Kotlin.toString(this.lastName)) + (', phoneNumber=' + Kotlin.toString(this.phoneNumber)) + ')';
+          return 'User(_id=' + Kotlin.toString(this._id) + (', firstName=' + Kotlin.toString(this.firstName)) + (', lastName=' + Kotlin.toString(this.lastName)) + (', phoneNumber=' + Kotlin.toString(this.phoneNumber)) + ')';
         },
         hashCode: function () {
           var result = 0;
-          result = result * 31 + Kotlin.hashCode(this.id) | 0;
+          result = result * 31 + Kotlin.hashCode(this._id) | 0;
           result = result * 31 + Kotlin.hashCode(this.firstName) | 0;
           result = result * 31 + Kotlin.hashCode(this.lastName) | 0;
           result = result * 31 + Kotlin.hashCode(this.phoneNumber) | 0;
           return result;
         },
         equals_za3rmp$: function (other) {
-          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.id, other.id) && Kotlin.equals(this.firstName, other.firstName) && Kotlin.equals(this.lastName, other.lastName) && Kotlin.equals(this.phoneNumber, other.phoneNumber)))));
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this._id, other._id) && Kotlin.equals(this.firstName, other.firstName) && Kotlin.equals(this.lastName, other.lastName) && Kotlin.equals(this.phoneNumber, other.phoneNumber)))));
         }
       }),
       Row: Kotlin.createClass(function () {
@@ -329,15 +347,77 @@
           layout = _.prat.ContainerLayout.object.DEFAULT;
         Kotlin.modules['Yested'].net.yested.with_ji1yox$(new _.prat.Page((tmp$0 = Kotlin.modules['Yested'].net.yested.el_61zpoe$(placeholderElementId)) != null ? tmp$0 : Kotlin.throwNPE(), layout), _.prat.page_s0l1ol$f(init));
       },
-      f_18: function () {
+      Coords: Kotlin.createClass(null, function (latitude, longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+      }, /** @lends _.prat.Coords.prototype */ {
+        component1: function () {
+          return this.latitude;
+        },
+        component2: function () {
+          return this.longitude;
+        },
+        copy_puj7f4$: function (latitude, longitude) {
+          return new _.prat.Coords(latitude === void 0 ? this.latitude : latitude, longitude === void 0 ? this.longitude : longitude);
+        },
+        toString: function () {
+          return 'Coords(latitude=' + Kotlin.toString(this.latitude) + (', longitude=' + Kotlin.toString(this.longitude)) + ')';
+        },
+        hashCode: function () {
+          var result = 0;
+          result = result * 31 + Kotlin.hashCode(this.latitude) | 0;
+          result = result * 31 + Kotlin.hashCode(this.longitude) | 0;
+          return result;
+        },
+        equals_za3rmp$: function (other) {
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.latitude, other.latitude) && Kotlin.equals(this.longitude, other.longitude)))));
+        }
+      }),
+      Position: Kotlin.createClass(null, function (coords) {
+        this.coords = coords;
+      }, /** @lends _.prat.Position.prototype */ {
+        component1: function () {
+          return this.coords;
+        },
+        copy_aqxlsn$: function (coords) {
+          return new _.prat.Position(coords === void 0 ? this.coords : coords);
+        },
+        toString: function () {
+          return 'Position(coords=' + Kotlin.toString(this.coords) + ')';
+        },
+        hashCode: function () {
+          var result = 0;
+          result = result * 31 + Kotlin.hashCode(this.coords) | 0;
+          return result;
+        },
+        equals_za3rmp$: function (other) {
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && Kotlin.equals(this.coords, other.coords))));
+        }
+      }),
+      locate_puvnrn$: function (listener) {
+        navigator.geolocation.getCurrentPosition(listener);
+      },
+      location: function () {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+          });
+        }
+        if ('geolocation' in navigator) {
+          console.log('geo');
+        }
+         else {
+          console.log('NO geo');
+        }
+      },
+      f_19: function () {
         this.unaryPlus_pdl1w0$('Summon');
       },
       main_kand9s$f: function () {
-        this.brand_75yags$('#', _.prat.f_18);
+        this.brand_75yags$('#', _.prat.f_19);
       },
       main_kand9s$f_0: function () {
       },
-      f_19: function (divContainer) {
+      f_20: function (divContainer) {
         return function () {
           this.br();
           this.br();
@@ -346,15 +426,15 @@
           this.unaryPlus_pv6laa$(divContainer);
         };
       },
-      f_20: function (divContainer) {
+      f_21: function (divContainer) {
         return function () {
-          this.div_kb10gb$(void 0, void 0, _.prat.f_19(divContainer));
+          this.div_kb10gb$(void 0, void 0, _.prat.f_20(divContainer));
         };
       },
       main_kand9s$f_1: function (navbar, divContainer) {
         return function () {
           this.topMenu_tx5hdt$(navbar);
-          this.content_6csr66$(_.prat.f_20(divContainer));
+          this.content_6csr66$(_.prat.f_21(divContainer));
         };
       },
       main_kand9s$: function (args) {
@@ -378,7 +458,7 @@
         }
       }, /** @lends _.prat.ContentDiv */ {
         f: function () {
-          this.unaryPlus_pv6laa$(_.prat.createInfoDiv_61zpoe$('http://localhost:8080/invites/' + Kotlin.toString(_.prat.extractId_61zpoe$(window.location.href))));
+          this.unaryPlus_pv6laa$(_.prat.createInfoDiv_61zpoe$('https://intense-waters-9652.herokuapp.com/invites/' + Kotlin.toString(_.prat.extractId_61zpoe$(window.location.href))));
         },
         f_0: function () {
           this.col_scryt2$([new Kotlin.modules['Yested'].net.yested.bootstrap.Medium(12)], _.prat.ContentDiv.f);
