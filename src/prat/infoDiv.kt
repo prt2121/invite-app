@@ -13,6 +13,13 @@ import net.yested.bootstrap.TextAlign
 
 fun createInfoDiv(url: String): Div {
 
+  var position: String = ""
+
+  locate {
+    println("lat ${it.coords.latitude} long ${it.coords.longitude}")
+    position = "${it.coords.latitude},${it.coords.longitude}"
+  }
+
   val placeholder = Div() with {
     div {
       br();br();br();br();br();br();br()
@@ -98,7 +105,8 @@ fun createInfoDiv(url: String): Div {
                     label = { +"Accept" },
                     look = ButtonLook.SUCCESS,
                     onclick = {
-                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"ACCEPT\"")
+                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"ACCEPT\"").replace("\"pickupAddress\": \"\"", "\"pickupAddress\": \"$position\"")
+                      println("Accept : $position")
                       ajaxPost<Invite>(
                           AjaxRequest(url = resourceUrl,
                               type = "PUT",

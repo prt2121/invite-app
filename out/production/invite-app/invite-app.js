@@ -2,6 +2,12 @@
   'use strict';
   var _ = Kotlin.defineRootPackage(null, /** @lends _ */ {
     prat: Kotlin.definePackage(null, /** @lends _.prat */ {
+      createInfoDiv_61zpoe$f: function (position) {
+        return function (it) {
+          Kotlin.println('lat ' + it.coords.latitude + ' long ' + it.coords.longitude);
+          position.v = it.coords.latitude + ',' + it.coords.longitude;
+        };
+      },
       f: function () {
         this.unaryPlus_pdl1w0$('Fetching message...');
       },
@@ -16,7 +22,7 @@
         _.prat.spinner_4wh9n3$(this, new _.prat.SpinnerOptions(void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, void 0, 0.25));
         Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f);
       },
-      createInfoDiv_61zpoe$f: function () {
+      createInfoDiv_61zpoe$f_0: function () {
         this.div_kb10gb$(void 0, void 0, _.prat.f_0);
       },
       f_1: function (invite) {
@@ -79,50 +85,53 @@
         Kotlin.println('ajaxPost id : ' + it._id);
         Kotlin.println('ajaxPost status : ' + it.status);
       },
-      f_14: function (template, resourceUrl) {
+      f_14: function (template, position, resourceUrl) {
         return function (it) {
-          var data = template.replace('"status": "PENDING"', '"status": "ACCEPT"');
+          var data = template.replace('"status": "PENDING"', '"status": "ACCEPT"').replace('"pickupAddress": ""', '"' + 'pickupAddress' + '"' + ': ' + '"' + position.v + '"');
+          Kotlin.println('Accept : ' + position.v);
           Kotlin.modules['Yested'].net.yested.ajaxPost_f0flkx$(new Kotlin.modules['Yested'].net.yested.AjaxRequest(resourceUrl, 'PUT', data, void 0, void 0, _.prat.f_13));
         };
       },
-      f_15: function (template, resourceUrl) {
+      f_15: function (template, resourceUrl, position) {
         return function () {
           Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_9, void 0, void 0, void 0, void 0, _.prat.f_11(template, resourceUrl));
           this.nbsp_za3lpa$();
-          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_12, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_14(template, resourceUrl));
+          Kotlin.modules['Yested'].net.yested.bootstrap.btsButton_ghocd8$(this, Kotlin.modules['Yested'].net.yested.ButtonType.object.BUTTON, _.prat.f_12, Kotlin.modules['Yested'].net.yested.bootstrap.ButtonLook.object.SUCCESS, void 0, void 0, void 0, _.prat.f_14(template, position, resourceUrl));
         };
       },
-      f_16: function (template, resourceUrl) {
+      f_16: function (template, resourceUrl, position) {
         return function () {
-          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_15(template, resourceUrl)));
+          this.unaryPlus_pv6laa$(this.div_kb10gb$(void 0, void 0, _.prat.f_15(template, resourceUrl, position)));
         };
       },
-      f_17: function (template, resourceUrl, this$) {
+      f_17: function (template, resourceUrl, position, this$) {
         return function () {
-          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_16(template, resourceUrl));
+          Kotlin.modules['Yested'].net.yested.bootstrap.aligned_3834vs$(this$, Kotlin.modules['Yested'].net.yested.bootstrap.TextAlign.object.CENTER, _.prat.f_16(template, resourceUrl, position));
         };
       },
-      f_18: function (invite, template, resourceUrl) {
+      f_18: function (invite, template, resourceUrl, position) {
         return function () {
           _.prat.row_yqo6f9$(this, _.prat.f_3(invite));
           this.br();
           _.prat.row_yqo6f9$(this, _.prat.f_6(invite, this));
           this.br();
           _.prat.row_yqo6f9$(this, _.prat.f_8(invite, this));
-          _.prat.row_yqo6f9$(this, _.prat.f_17(template, resourceUrl, this));
+          _.prat.row_yqo6f9$(this, _.prat.f_17(template, resourceUrl, position, this));
         };
       },
-      createInfoDiv_61zpoe$f_0: function (placeholder) {
+      createInfoDiv_61zpoe$f_1: function (placeholder, position) {
         return function (invite) {
           Kotlin.println('id ' + invite.from._id);
           var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite.from._id;
           var template = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.from._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + ',' + '\n' + '                          ' + '"' + '_id' + '"' + ': ' + '"' + invite.to._id + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                  ';
-          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_18(invite, template, resourceUrl)));
+          placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_18(invite, template, resourceUrl, position)));
         };
       },
       createInfoDiv_61zpoe$: function (url) {
-        var placeholder = Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.createInfoDiv_61zpoe$f);
-        Kotlin.modules['Yested'].net.yested.ajaxGet_435vpa$(url, _.prat.createInfoDiv_61zpoe$f_0(placeholder));
+        var position = {v: ''};
+        _.prat.locate_puvnrn$(_.prat.createInfoDiv_61zpoe$f(position));
+        var placeholder = Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.createInfoDiv_61zpoe$f_0);
+        Kotlin.modules['Yested'].net.yested.ajaxGet_435vpa$(url, _.prat.createInfoDiv_61zpoe$f_1(placeholder, position));
         return placeholder;
       },
       Invite: Kotlin.createClass(null, function (_id, from, to, destinationLatLng, destinationAddress, message, status, pickupAddress) {
@@ -337,6 +346,68 @@
         if (layout === void 0)
           layout = _.prat.ContainerLayout.object.DEFAULT;
         Kotlin.modules['Yested'].net.yested.with_ji1yox$(new _.prat.Page((tmp$0 = Kotlin.modules['Yested'].net.yested.el_61zpoe$(placeholderElementId)) != null ? tmp$0 : Kotlin.throwNPE(), layout), _.prat.page_s0l1ol$f(init));
+      },
+      Coords: Kotlin.createClass(null, function (latitude, longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+      }, /** @lends _.prat.Coords.prototype */ {
+        component1: function () {
+          return this.latitude;
+        },
+        component2: function () {
+          return this.longitude;
+        },
+        copy_puj7f4$: function (latitude, longitude) {
+          return new _.prat.Coords(latitude === void 0 ? this.latitude : latitude, longitude === void 0 ? this.longitude : longitude);
+        },
+        toString: function () {
+          return 'Coords(latitude=' + Kotlin.toString(this.latitude) + (', longitude=' + Kotlin.toString(this.longitude)) + ')';
+        },
+        hashCode: function () {
+          var result = 0;
+          result = result * 31 + Kotlin.hashCode(this.latitude) | 0;
+          result = result * 31 + Kotlin.hashCode(this.longitude) | 0;
+          return result;
+        },
+        equals_za3rmp$: function (other) {
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.latitude, other.latitude) && Kotlin.equals(this.longitude, other.longitude)))));
+        }
+      }),
+      Position: Kotlin.createClass(null, function (coords) {
+        this.coords = coords;
+      }, /** @lends _.prat.Position.prototype */ {
+        component1: function () {
+          return this.coords;
+        },
+        copy_aqxlsn$: function (coords) {
+          return new _.prat.Position(coords === void 0 ? this.coords : coords);
+        },
+        toString: function () {
+          return 'Position(coords=' + Kotlin.toString(this.coords) + ')';
+        },
+        hashCode: function () {
+          var result = 0;
+          result = result * 31 + Kotlin.hashCode(this.coords) | 0;
+          return result;
+        },
+        equals_za3rmp$: function (other) {
+          return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && Kotlin.equals(this.coords, other.coords))));
+        }
+      }),
+      locate_puvnrn$: function (listener) {
+        navigator.geolocation.getCurrentPosition(listener);
+      },
+      location: function () {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+          });
+        }
+        if ('geolocation' in navigator) {
+          console.log('geo');
+        }
+         else {
+          console.log('NO geo');
+        }
       },
       f_19: function () {
         this.unaryPlus_pdl1w0$('Summon');
