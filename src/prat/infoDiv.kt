@@ -36,7 +36,8 @@ fun createInfoDiv(url: String): Div {
     // now invite is not type 'Invite'
     println("id ${invite._id}")
     val resourceUrl = "https://intense-waters-9652.herokuapp.com/invites/${invite._id}"
-    val template = """
+    val pushUrl = "https://api.parse.com/1/push"
+    val inviteTemplate = """
                       {
                         "from": {
                           "firstName": "${invite.from.firstName}",
@@ -55,7 +56,18 @@ fun createInfoDiv(url: String): Div {
                         "pickupAddress": "",
                         "_id": "${invite._id}"
                       }
-                  """
+                      """
+    val dataTemplate = """
+                      {
+                        "where": {
+                          "user": "${invite.from.firstName} ${invite.from.lastName}"
+                        },
+                        "data": {
+                          "alert": "Invite status update!",
+                          "invite": "inviteData"
+                        }
+                      }
+                      """
 
     placeholder.setChild(
         Div() with {
@@ -89,7 +101,7 @@ fun createInfoDiv(url: String): Div {
                     type = ButtonType.BUTTON,
                     label = { +"Reject" },
                     onclick = {
-                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"REJECT\"")
+                      val data = inviteTemplate.replace("\"status\": \"PENDING\"", "\"status\": \"REJECT\"")
                       ajaxPost<Invite>(
                           AjaxRequest(url = resourceUrl,
                               type = "PUT",
@@ -105,14 +117,26 @@ fun createInfoDiv(url: String): Div {
                     label = { +"Accept" },
                     look = ButtonLook.SUCCESS,
                     onclick = {
-                      val data = template.replace("\"status\": \"PENDING\"", "\"status\": \"ACCEPT\"").replace("\"pickupAddress\": \"\"", "\"pickupAddress\": \"$position\"")
-                      println("Accept : $position")
+                      val inviteData = inviteTemplate.replace("\"status\": \"PENDING\"", "\"status\": \"ACCEPT\"").replace("\"pickupAddress\": \"\"", "\"pickupAddress\": \"$position\"")
+                      val pushData = dataTemplate.replace("\"invite\": \"inviteData\"", "\"invite\": $inviteData")
+                      println("position : $position")
                       ajaxPost<Invite>(
                           AjaxRequest(url = resourceUrl,
                               type = "PUT",
-                              data = data) {
+                              data = inviteData) {
                             println("ajaxPost id : ${it._id}")
                             println("ajaxPost status : ${it.status}")
+                          }
+                      )
+                      println("pushData : $pushData")
+                      post<pushResult>(
+                          Ajax(url = pushUrl,
+                              type = "POST",
+                              headers = json("X-Parse-Application-Id" to "",
+                                  "X-Parse-REST-API-Key" to "",
+                                  "Content-Type" to "application/json"
+                              ),
+                              data = pushData) {
                           }
                       )
                     })
