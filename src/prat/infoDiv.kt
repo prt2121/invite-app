@@ -63,6 +63,7 @@ fun createInfoDiv(url: String): Div {
                           "user": "${invite.from.firstName} ${invite.from.lastName}"
                         },
                         "data": {
+                          "title": "Summon",
                           "alert": "Invite status update!",
                           "invite": "inviteData"
                         }
