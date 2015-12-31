@@ -925,36 +925,97 @@
   function isSameNotNullRanges(other) {
     var classObject = this.constructor;
     if (this instanceof classObject && other instanceof classObject) {
-      return this.isEmpty() && other.isEmpty() || this.start === other.start && (this.end === other.end && this.increment === other.increment);
+      return this.isEmpty() && other.isEmpty() || this.first === other.first && (this.last === other.last && this.increment === other.increment);
     }
     return false;
   }
-  Kotlin.NumberRange = Kotlin.createClassNow(null, function(start, end) {
+  function isSameLongRanges(other) {
+    var classObject = this.constructor;
+    if (this instanceof classObject && other instanceof classObject) {
+      return this.isEmpty() && other.isEmpty() || this.first.equals_za3rmp$(other.first) && (this.last.equals_za3rmp$(other.last) && this.increment.equals_za3rmp$(other.increment));
+    }
+    return false;
+  }
+  function getProgressionFinalElement(start, end, increment) {
+    function mod(a, b) {
+      var mod = a % b;
+      return mod >= 0 ? mod : mod + b;
+    }
+    function differenceModulo(a, b, c) {
+      return mod(mod(a, c) - mod(b, c), c);
+    }
+    if (increment > 0) {
+      return end - differenceModulo(end, start, increment);
+    } else {
+      if (increment < 0) {
+        return end + differenceModulo(start, end, -increment);
+      } else {
+        throw new Kotlin.IllegalArgumentException("Increment is zero.");
+      }
+    }
+  }
+  function getProgressionFinalElementLong(start, end, increment) {
+    function mod(a, b) {
+      var mod = a.modulo(b);
+      return!mod.isNegative() ? mod : mod.add(b);
+    }
+    function differenceModulo(a, b, c) {
+      return mod(mod(a, c).subtract(mod(b, c)), c);
+    }
+    var diff;
+    if (increment.compareTo_za3rmp$(Kotlin.Long.ZERO) > 0) {
+      diff = differenceModulo(end, start, increment);
+      return diff.isZero() ? end : end.subtract(diff);
+    } else {
+      if (increment.compareTo_za3rmp$(Kotlin.Long.ZERO) < 0) {
+        diff = differenceModulo(start, end, increment.unaryMinus());
+        return diff.isZero() ? end : end.add(diff);
+      } else {
+        throw new Kotlin.IllegalArgumentException("Increment is zero.");
+      }
+    }
+  }
+  lazyInitClasses.NumberProgression = Kotlin.createClass(function() {
+    return[Kotlin.modules["builtins"].kotlin.Iterable];
+  }, function(start, end, increment) {
     this.start = start;
-    this.end = end;
-    this.increment = 1;
-  }, {contains:function(number) {
-    return this.start <= number && number <= this.end;
-  }, iterator:function() {
-    return new Kotlin.RangeIterator(this.start, this.end, this.increment);
+    this.endInclusive = end;
+    this.first = start;
+    this.last = getProgressionFinalElement(start, end, increment);
+    this.increment = increment;
+    if (this.increment === 0) {
+      throw new Kotlin.IllegalArgumentException("Increment must be non-zero");
+    }
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, iterator:function() {
+    return new Kotlin.RangeIterator(this.first, this.last, this.increment);
   }, isEmpty:function() {
-    return this.start > this.end;
+    return this.increment > 0 ? this.first > this.last : this.first < this.last;
   }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * this.start | 0 + this.end | 0;
-  }, equals_za3rmp$:isSameNotNullRanges}, {object_initializer$:function() {
+    return this.isEmpty() ? -1 : 31 * (31 * this.first + this.last) + this.increment;
+  }, equals_za3rmp$:isSameNotNullRanges, toString:function() {
+    return this.increment > 0 ? this.first.toString() + ".." + this.last + " step " + this.increment : this.first.toString() + " downTo " + this.last + " step " + -this.increment;
+  }});
+  lazyInitClasses.NumberRange = Kotlin.createClass(function() {
+    return[Kotlin.modules["builtins"].kotlin.ClosedRange, Kotlin.NumberProgression];
+  }, function $fun(start, endInclusive) {
+    $fun.baseInitializer.call(this, start, endInclusive, 1);
+    this.start = start;
+    this.endInclusive = endInclusive;
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, contains_htax2k$:function(item) {
+    return this.start <= item && item <= this.endInclusive;
+  }, isEmpty:function() {
+    return this.start > this.endInclusive;
+  }, hashCode:function() {
+    return this.isEmpty() ? -1 : 31 * this.start + this.endInclusive;
+  }, equals_za3rmp$:isSameNotNullRanges, toString:function() {
+    return this.start.toString() + ".." + this.endInclusive;
+  }}, {object_initializer$:function() {
     return{EMPTY:new this(1, 0)};
   }});
-  Kotlin.NumberProgression = Kotlin.createClassNow(null, function(start, end, increment) {
-    this.start = start;
-    this.end = end;
-    this.increment = increment;
-  }, {iterator:function() {
-    return new Kotlin.RangeIterator(this.start, this.end, this.increment);
-  }, isEmpty:function() {
-    return this.increment > 0 ? this.start > this.end : this.start < this.end;
-  }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * (31 * this.start | 0 + this.end | 0) + this.increment | 0;
-  }, equals_za3rmp$:isSameNotNullRanges});
   lazyInitClasses.LongRangeIterator = Kotlin.createClass(function() {
     return[Kotlin.modules["builtins"].kotlin.Iterator];
   }, function(start, end, increment) {
@@ -973,32 +1034,47 @@
       return this.i.compare(this.end) <= 0;
     }
   }});
-  Kotlin.LongRange = Kotlin.createClassNow(null, function(start, end) {
+  lazyInitClasses.LongProgression = Kotlin.createClass(function() {
+    return[Kotlin.modules["builtins"].kotlin.Iterable];
+  }, function(start, end, increment) {
     this.start = start;
-    this.end = end;
-    this.increment = Kotlin.Long.ONE;
-  }, {contains:function(number) {
-    return this.start.compare(number) <= 0 && number.compare(this.end) <= 0;
-  }, iterator:function() {
-    return new Kotlin.LongRangeIterator(this.start, this.end, this.increment);
+    this.endInclusive = end;
+    this.first = start;
+    this.last = getProgressionFinalElementLong(start, end, increment);
+    this.increment = increment;
+    if (this.increment.isZero()) {
+      throw new Kotlin.IllegalArgumentException("Increment must be non-zero");
+    }
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, iterator:function() {
+    return new Kotlin.LongRangeIterator(this.first, this.last, this.increment);
   }, isEmpty:function() {
-    return this.start.compare(this.end) > 0;
+    return this.increment.isNegative() ? this.first.compare(this.last) < 0 : this.first.compare(this.last) > 0;
   }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * this.start.toInt() + this.end.toInt();
-  }, equals_za3rmp$:isSameNotNullRanges}, {object_initializer$:function() {
+    return this.isEmpty() ? -1 : 31 * (31 * this.first.toInt() + this.last.toInt()) + this.increment.toInt();
+  }, equals_za3rmp$:isSameLongRanges, toString:function() {
+    return!this.increment.isNegative() ? this.first.toString() + ".." + this.last + " step " + this.increment : this.first.toString() + " downTo " + this.last + " step " + this.increment.unaryMinus();
+  }});
+  lazyInitClasses.LongRange = Kotlin.createClass(function() {
+    return[Kotlin.modules["builtins"].kotlin.ClosedRange, Kotlin.LongProgression];
+  }, function $fun(start, endInclusive) {
+    $fun.baseInitializer.call(this, start, endInclusive, Kotlin.Long.ONE);
+    this.start = start;
+    this.endInclusive = endInclusive;
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, contains_htax2k$:function(item) {
+    return this.start.compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(this.endInclusive) <= 0;
+  }, isEmpty:function() {
+    return this.start.compare(this.endInclusive) > 0;
+  }, hashCode:function() {
+    return this.isEmpty() ? -1 : 31 * this.start.toInt() + this.endInclusive.toInt();
+  }, equals_za3rmp$:isSameLongRanges, toString:function() {
+    return this.start.toString() + ".." + this.endInclusive;
+  }}, {object_initializer$:function() {
     return{EMPTY:new this(Kotlin.Long.ONE, Kotlin.Long.ZERO)};
   }});
-  Kotlin.LongProgression = Kotlin.createClassNow(null, function(start, end, increment) {
-    this.start = start;
-    this.end = end;
-    this.increment = increment;
-  }, {iterator:function() {
-    return new Kotlin.LongRangeIterator(this.start, this.end, this.increment);
-  }, isEmpty:function() {
-    return this.increment.isNegative() ? this.start.compare(this.end) < 0 : this.start.compare(this.end) > 0;
-  }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * (31 * this.start.toInt() + this.end.toInt()) + this.increment.toInt();
-  }, equals_za3rmp$:isSameNotNullRanges});
   lazyInitClasses.CharRangeIterator = Kotlin.createClass(function() {
     return[Kotlin.RangeIterator];
   }, function(start, end, increment) {
@@ -1008,36 +1084,49 @@
     this.i = this.i + this.increment;
     return String.fromCharCode(value);
   }});
-  Kotlin.CharRange = Kotlin.createClassNow(null, function(start, end) {
+  lazyInitClasses.CharProgression = Kotlin.createClassNow(function() {
+    return[Kotlin.modules["builtins"].kotlin.Iterable];
+  }, function(start, end, increment) {
     this.start = start;
+    this.endInclusive = end;
+    this.first = start;
     this.startCode = start.charCodeAt(0);
-    this.end = end;
-    this.endCode = end.charCodeAt(0);
-    this.increment = 1;
-  }, {contains:function(char) {
-    return this.start <= char && char <= this.end;
-  }, iterator:function() {
-    return new Kotlin.CharRangeIterator(this.startCode, this.endCode, this.increment);
-  }, isEmpty:function() {
-    return this.start > this.end;
-  }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * this.startCode | 0 + this.endCode | 0;
-  }, equals_za3rmp$:isSameNotNullRanges}, {object_initializer$:function() {
-    return{EMPTY:new this(Kotlin.toChar(1), Kotlin.toChar(0))};
-  }});
-  Kotlin.CharProgression = Kotlin.createClassNow(null, function(start, end, increment) {
-    this.start = start;
-    this.startCode = start.charCodeAt(0);
-    this.end = end;
-    this.endCode = end.charCodeAt(0);
+    this.endCode = getProgressionFinalElement(this.startCode, end.charCodeAt(0), increment);
+    this.last = String.fromCharCode(this.endCode);
     this.increment = increment;
-  }, {iterator:function() {
+    if (this.increment === 0) {
+      throw new Kotlin.IllegalArgumentException("Increment must be non-zero");
+    }
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, iterator:function() {
     return new Kotlin.CharRangeIterator(this.startCode, this.endCode, this.increment);
   }, isEmpty:function() {
-    return this.increment > 0 ? this.start > this.end : this.start < this.end;
+    return this.increment > 0 ? this.startCode > this.endCode : this.startCode < this.endCode;
   }, hashCode:function() {
     return this.isEmpty() ? -1 : 31 * (31 * this.startCode | 0 + this.endCode | 0) + this.increment | 0;
-  }, equals_za3rmp$:isSameNotNullRanges});
+  }, equals_za3rmp$:isSameNotNullRanges, toString:function() {
+    return this.increment > 0 ? this.first.toString() + ".." + this.last + " step " + this.increment : this.first.toString() + " downTo " + this.last + " step " + -this.increment;
+  }});
+  lazyInitClasses.CharRange = Kotlin.createClass(function() {
+    return[Kotlin.modules["builtins"].kotlin.ClosedRange, Kotlin.CharProgression];
+  }, function $fun(start, endInclusive) {
+    $fun.baseInitializer.call(this, start, endInclusive, 1);
+    this.start = start;
+    this.endInclusive = endInclusive;
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, contains_htax2k$:function(item) {
+    return this.start <= item && item <= this.endInclusive;
+  }, isEmpty:function() {
+    return this.start > this.endInclusive;
+  }, hashCode:function() {
+    return this.isEmpty() ? -1 : 31 * this.startCode | 0 + this.endCode | 0;
+  }, equals_za3rmp$:isSameNotNullRanges, toString:function() {
+    return this.start.toString() + ".." + this.endInclusive;
+  }}, {object_initializer$:function() {
+    return{EMPTY:new this(Kotlin.toChar(1), Kotlin.toChar(0))};
+  }});
   Kotlin.Comparator = Kotlin.createClassNow(null, null, {compare:throwAbstractFunctionInvocationError("Comparator#compare")});
   Kotlin.collectionsMax = function(c, comp) {
     if (c.isEmpty()) {
@@ -1061,14 +1150,12 @@
     if (mutableList instanceof Array) {
       mutableList.sort(boundComparator);
     }
-    var array = [];
-    var it = mutableList.iterator();
-    while (it.hasNext()) {
-      array.push(it.next());
-    }
-    array.sort(boundComparator);
-    for (var i = 0, n = array.length;i < n;i++) {
-      mutableList.set_vux3hl$(i, array[i]);
+    if (mutableList.size > 1) {
+      var array = Kotlin.copyToArray(mutableList);
+      array.sort(boundComparator);
+      for (var i = 0, n = array.length;i < n;i++) {
+        mutableList.set_vux3hl$(i, array[i]);
+      }
     }
   };
   Kotlin.primitiveArraySort = function(array) {
@@ -2411,6 +2498,14 @@
     return this.nextBoolean();
   }}), Range:Kotlin.createTrait(null, {isEmpty:function() {
     return Kotlin.compareTo(this.start, this.end) > 0;
+  }}), ClosedRange:Kotlin.createTrait(function() {
+    return[_.kotlin.Range];
+  }, {end:{get:function() {
+    return this.endInclusive;
+  }}, contains_htax2k$:function(item) {
+    return Kotlin.compareTo(item, this.start) >= 0 && Kotlin.compareTo(item, this.endInclusive) <= 0;
+  }, isEmpty:function() {
+    return Kotlin.compareTo(this.start, this.endInclusive) > 0;
   }}), annotation:Kotlin.definePackage(null, {AnnotationTarget:Kotlin.createEnumClass(function() {
     return[Kotlin.Enum];
   }, function $fun() {
@@ -2593,6 +2688,20 @@
       this.greaterOrEqual = "\u2265";
     });
     this.UNINITIALIZED_VALUE = Kotlin.createObject(null, null);
+    this.NaturalOrderComparator = Kotlin.createObject(function() {
+      return[Kotlin.Comparator];
+    }, null, {compare:function(c1, c2) {
+      return Kotlin.compareTo(c1, c2);
+    }, reversed:function() {
+      return _.kotlin.ReverseOrderComparator;
+    }});
+    this.ReverseOrderComparator = Kotlin.createObject(function() {
+      return[Kotlin.Comparator];
+    }, null, {compare:function(c1, c2) {
+      return Kotlin.compareTo(c2, c1);
+    }, reversed:function() {
+      return _.kotlin.NaturalOrderComparator;
+    }});
   }, {js:Kotlin.definePackage(null, {asDynamic_s8jyvl$:Kotlin.defineInlineFunction("stdlib.kotlin.js.asDynamic_s8jyvl$", function($receiver) {
     return $receiver;
   }), iterator_s8jyvl$:function($receiver) {
@@ -2881,17 +2990,23 @@
   }), sort_ehvuiv$f:function(a, b) {
     return Kotlin.compareTo(a, b);
   }, sort_ehvuiv$:function($receiver) {
-    $receiver.sort(_.kotlin.sort_ehvuiv$f);
+    if ($receiver.length > 1) {
+      $receiver.sort(_.kotlin.sort_ehvuiv$f);
+    }
   }, sort_se6h4y$f:function(a, b) {
     return a.compareTo_za3rmp$(b);
   }, sort_se6h4y$:function($receiver) {
-    $receiver.sort(_.kotlin.sort_se6h4y$f);
+    if ($receiver.length > 1) {
+      $receiver.sort(_.kotlin.sort_se6h4y$f);
+    }
   }, sortWith_pf0rc$f:function(comparator) {
     return function(a, b) {
       return comparator.compare(a, b);
     };
   }, sortWith_pf0rc$:function($receiver, comparator) {
-    $receiver.sort(_.kotlin.sortWith_pf0rc$f(comparator));
+    if ($receiver.length > 1) {
+      $receiver.sort(_.kotlin.sortWith_pf0rc$f(comparator));
+    }
   }, toTypedArray_l1lu5s$:function($receiver) {
     return $receiver.slice(0);
   }, toTypedArray_964n92$:function($receiver) {
@@ -2932,7 +3047,7 @@
     if (!ignoreCase) {
       return $receiver.startsWith(prefix, 0);
     } else {
-      return _.kotlin.regionMatches_v7eu1p$($receiver, 0, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
+      return _.kotlin.regionMatches_qb0ndp$($receiver, 0, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
     }
   }, startsWith_rh6gah$:function($receiver, prefix, thisOffset, ignoreCase) {
     if (ignoreCase === void 0) {
@@ -2941,7 +3056,7 @@
     if (!ignoreCase) {
       return $receiver.startsWith(prefix, thisOffset);
     } else {
-      return _.kotlin.regionMatches_v7eu1p$($receiver, thisOffset, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
+      return _.kotlin.regionMatches_qb0ndp$($receiver, thisOffset, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
     }
   }, endsWith_41xvrb$:function($receiver, suffix, ignoreCase) {
     if (ignoreCase === void 0) {
@@ -2950,17 +3065,16 @@
     if (!ignoreCase) {
       return $receiver.endsWith(suffix);
     } else {
-      return _.kotlin.regionMatches_v7eu1p$($receiver, _.kotlin.length_gw00vq$($receiver) - _.kotlin.length_gw00vq$(suffix), suffix, 0, _.kotlin.length_gw00vq$(suffix), ignoreCase);
+      return _.kotlin.regionMatches_qb0ndp$($receiver, _.kotlin.length_gw00vq$($receiver) - _.kotlin.length_gw00vq$(suffix), suffix, 0, _.kotlin.length_gw00vq$(suffix), ignoreCase);
     }
   }, matches_94jgcu$:Kotlin.defineInlineFunction("stdlib.kotlin.matches_94jgcu$", function($receiver, regex) {
     var result = $receiver.match(regex);
     return result != null && result.length > 0;
-  }), isEmpty_gw00vq$:Kotlin.defineInlineFunction("stdlib.kotlin.isEmpty_gw00vq$", function($receiver) {
-    return _.kotlin.length_gw00vq$($receiver) === 0;
-  }), isBlank_pdl1w0$:function($receiver) {
+  }), isBlank_gw00vq$:function($receiver) {
     var tmp$0 = _.kotlin.length_gw00vq$($receiver) === 0;
     if (!tmp$0) {
-      var result = $receiver.match("^[\\s\\xA0]+$");
+      var $receiver_0 = typeof $receiver === "string" ? $receiver : $receiver.toString();
+      var result = $receiver_0.match("^[\\s\\xA0]+$");
       tmp$0 = result != null && result.length > 0;
     }
     return tmp$0;
@@ -2969,18 +3083,15 @@
       ignoreCase = false;
     }
     return $receiver == null ? anotherString == null : !ignoreCase ? Kotlin.equals($receiver, anotherString) : anotherString != null && Kotlin.equals($receiver.toLowerCase(), anotherString.toLowerCase());
-  }, regionMatches_v7eu1p$:function($receiver, thisOffset, other, otherOffset, length, ignoreCase) {
+  }, regionMatches_qb0ndp$:function($receiver, thisOffset, other, otherOffset, length, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    if (otherOffset < 0 || (thisOffset < 0 || (thisOffset > _.kotlin.length_gw00vq$($receiver) - length || otherOffset > _.kotlin.length_gw00vq$(other) - length))) {
-      return false;
-    }
-    return _.kotlin.equals_41xvrb$($receiver.substring(thisOffset, thisOffset + length), other.substring(otherOffset, otherOffset + length), ignoreCase);
+    return _.kotlin.regionMatchesImpl($receiver, thisOffset, other, otherOffset, length, ignoreCase);
   }, capitalize_pdl1w0$:Kotlin.defineInlineFunction("stdlib.kotlin.capitalize_pdl1w0$", function($receiver) {
-    return _.kotlin.isNotEmpty_pdl1w0$($receiver) ? $receiver.substring(0, 1).toUpperCase() + $receiver.substring(1) : $receiver;
+    return _.kotlin.isNotEmpty_gw00vq$($receiver) ? $receiver.substring(0, 1).toUpperCase() + $receiver.substring(1) : $receiver;
   }), decapitalize_pdl1w0$:Kotlin.defineInlineFunction("stdlib.kotlin.decapitalize_pdl1w0$", function($receiver) {
-    return _.kotlin.isNotEmpty_pdl1w0$($receiver) ? $receiver.substring(0, 1).toLowerCase() + $receiver.substring(1) : $receiver;
+    return _.kotlin.isNotEmpty_gw00vq$($receiver) ? $receiver.substring(0, 1).toLowerCase() + $receiver.substring(1) : $receiver;
   }), replace_dn5w6f$:function($receiver, oldValue, newValue, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -3264,7 +3375,7 @@
     return null;
   }), findLast_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_dgtl0h$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3275,7 +3386,7 @@
     return null;
   }), findLast_n9o8rw$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_n9o8rw$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3286,7 +3397,7 @@
     return null;
   }), findLast_1seo9s$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_1seo9s$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_964n92$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_964n92$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3297,7 +3408,7 @@
     return null;
   }), findLast_mf0bwc$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_mf0bwc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3308,7 +3419,7 @@
     return null;
   }), findLast_56tpji$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_56tpji$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3319,7 +3430,7 @@
     return null;
   }), findLast_jp64to$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_jp64to$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3330,7 +3441,7 @@
     return null;
   }), findLast_74vioc$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_74vioc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3341,7 +3452,7 @@
     return null;
   }), findLast_c9nn9k$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_c9nn9k$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3352,7 +3463,7 @@
     return null;
   }), findLast_pqtrl8$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_pqtrl8$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3815,7 +3926,7 @@
     return-1;
   }), indexOfLast_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_dgtl0h$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3825,7 +3936,7 @@
     return-1;
   }), indexOfLast_n9o8rw$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_n9o8rw$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3835,7 +3946,7 @@
     return-1;
   }), indexOfLast_1seo9s$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_1seo9s$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_964n92$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_964n92$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3845,7 +3956,7 @@
     return-1;
   }), indexOfLast_mf0bwc$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_mf0bwc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3855,7 +3966,7 @@
     return-1;
   }), indexOfLast_56tpji$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_56tpji$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3865,7 +3976,7 @@
     return-1;
   }), indexOfLast_jp64to$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_jp64to$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3875,7 +3986,7 @@
     return-1;
   }), indexOfLast_74vioc$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_74vioc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3885,7 +3996,7 @@
     return-1;
   }), indexOfLast_c9nn9k$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_c9nn9k$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3895,7 +4006,7 @@
     return-1;
   }), indexOfLast_pqtrl8$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_pqtrl8$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver[index])) {
@@ -3952,7 +4063,7 @@
     return $receiver[_.kotlin.get_lastIndex_i2lc78$($receiver)];
   }, last_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.last_dgtl0h$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3963,7 +4074,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_n9o8rw$:Kotlin.defineInlineFunction("stdlib.kotlin.last_n9o8rw$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3974,7 +4085,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_1seo9s$:Kotlin.defineInlineFunction("stdlib.kotlin.last_1seo9s$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_964n92$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_964n92$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3985,7 +4096,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_mf0bwc$:Kotlin.defineInlineFunction("stdlib.kotlin.last_mf0bwc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -3996,7 +4107,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_56tpji$:Kotlin.defineInlineFunction("stdlib.kotlin.last_56tpji$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4007,7 +4118,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_jp64to$:Kotlin.defineInlineFunction("stdlib.kotlin.last_jp64to$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4018,7 +4129,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_74vioc$:Kotlin.defineInlineFunction("stdlib.kotlin.last_74vioc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4029,7 +4140,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_c9nn9k$:Kotlin.defineInlineFunction("stdlib.kotlin.last_c9nn9k$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4040,7 +4151,7 @@
     throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
   }), last_pqtrl8$:Kotlin.defineInlineFunction("stdlib.kotlin.last_pqtrl8$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4052,7 +4163,7 @@
   }), lastIndexOf_ke19y6$:function($receiver, element) {
     var tmp$0, tmp$1;
     if (element == null) {
-      tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+      tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
       while (tmp$0.hasNext()) {
         var index = tmp$0.next();
         if ($receiver[index] == null) {
@@ -4060,7 +4171,7 @@
         }
       }
     } else {
-      tmp$1 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+      tmp$1 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
       while (tmp$1.hasNext()) {
         var index_0 = tmp$1.next();
         if (Kotlin.equals(element, $receiver[index_0])) {
@@ -4071,7 +4182,7 @@
     return-1;
   }, lastIndexOf_bsmqrv$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (Kotlin.equals(element, $receiver[index])) {
@@ -4081,7 +4192,7 @@
     return-1;
   }, lastIndexOf_hgt5d7$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_964n92$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_964n92$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4091,7 +4202,7 @@
     return-1;
   }, lastIndexOf_q79yhh$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4101,7 +4212,7 @@
     return-1;
   }, lastIndexOf_96a6a3$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4111,7 +4222,7 @@
     return-1;
   }, lastIndexOf_thi4tv$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4121,7 +4232,7 @@
     return-1;
   }, lastIndexOf_tb5gmf$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4131,7 +4242,7 @@
     return-1;
   }, lastIndexOf_ssilt7$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element.equals_za3rmp$($receiver[index])) {
@@ -4141,7 +4252,7 @@
     return-1;
   }, lastIndexOf_x27eb7$:function($receiver, element) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (element === $receiver[index]) {
@@ -4173,7 +4284,7 @@
     return _.kotlin.isEmpty_i2lc78$($receiver) ? null : $receiver[$receiver.length - 1];
   }, lastOrNull_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_dgtl0h$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_eg9ybj$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4184,7 +4295,7 @@
     return null;
   }), lastOrNull_n9o8rw$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_n9o8rw$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_l1lu5s$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4195,7 +4306,7 @@
     return null;
   }), lastOrNull_1seo9s$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_1seo9s$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_964n92$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_964n92$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4206,7 +4317,7 @@
     return null;
   }), lastOrNull_mf0bwc$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_mf0bwc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_355nu0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4217,7 +4328,7 @@
     return null;
   }), lastOrNull_56tpji$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_56tpji$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_bvy38t$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4228,7 +4339,7 @@
     return null;
   }), lastOrNull_jp64to$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_jp64to$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_rjqrz0$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4239,7 +4350,7 @@
     return null;
   }), lastOrNull_74vioc$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_74vioc$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_tmsbgp$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4250,7 +4361,7 @@
     return null;
   }), lastOrNull_c9nn9k$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_c9nn9k$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_se6h4y$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -4261,7 +4372,7 @@
     return null;
   }), lastOrNull_pqtrl8$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_pqtrl8$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_i2lc78$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver[index];
@@ -5320,6 +5431,231 @@
       var element = tmp$0.next();
       if (predicate(element)) {
         destination.add_za3rmp$(element);
+      }
+    }
+    return destination;
+  }), filterIndexed_qy3he2$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_qy3he2$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_5j3lt$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_5j3lt$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_vs9yol$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_vs9yol$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_ke0vuh$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_ke0vuh$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_qd2zlp$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_qd2zlp$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_vlcunz$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_vlcunz$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_mb5uch$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_mb5uch$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_esogdp$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_esogdp$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_sj8ypt$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_sj8ypt$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_sttpq6$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_sttpq6$", function($receiver, destination, predicate) {
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_na55f1$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_na55f1$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_f5qgwn$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_f5qgwn$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_rr91qr$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_rr91qr$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_izxb50$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_izxb50$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_vo6pxj$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_vo6pxj$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_fl1s12$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_fl1s12$", function($receiver, destination, predicate) {
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_jtuo8r$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_jtuo8r$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_6fsnvr$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_6fsnvr$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
       }
     }
     return destination;
@@ -6540,7 +6876,134 @@
       list.add_za3rmp$(item);
     }
     return list;
-  }), reversed_eg9ybj$:function($receiver) {
+  }), reverse_eg9ybj$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var _this = $receiver;
+    var reverseIndex = _.kotlin.get_lastIndex_eg9ybj$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = _this[index];
+      _this[index] = _this[reverseIndex];
+      _this[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_l1lu5s$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_l1lu5s$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_964n92$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_964n92$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_355nu0$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_355nu0$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_bvy38t$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_bvy38t$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_rjqrz0$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_rjqrz0$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_tmsbgp$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_tmsbgp$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_se6h4y$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_se6h4y$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reverse_i2lc78$:function($receiver) {
+    var tmp$0;
+    var midPoint = ($receiver.length / 2 | 0) - 1;
+    if (midPoint < 0) {
+      return;
+    }
+    var reverseIndex = _.kotlin.get_lastIndex_i2lc78$($receiver);
+    tmp$0 = midPoint;
+    for (var index = 0;index <= tmp$0;index++) {
+      var tmp = $receiver[index];
+      $receiver[index] = $receiver[reverseIndex];
+      $receiver[reverseIndex] = tmp;
+      reverseIndex--;
+    }
+  }, reversed_eg9ybj$:function($receiver) {
     if (_.kotlin.isEmpty_eg9ybj$($receiver)) {
       return _.kotlin.emptyList();
     }
@@ -6711,38 +7174,89 @@
       result[lastIndex - i] = $receiver[i];
     }
     return result;
+  }, sortBy_2kbc8r$:Kotlin.defineInlineFunction("stdlib.kotlin.sortBy_2kbc8r$", function($receiver, selector) {
+    if ($receiver.length > 1) {
+      _.kotlin.sortWith_pf0rc$($receiver, Kotlin.createObject(function() {
+        return[Kotlin.Comparator];
+      }, null, {compare:function(a, b) {
+        return _.kotlin.compareValues_cj5vqg$(selector(a), selector(b));
+      }}));
+    }
+  }), sortByDescending_2kbc8r$:Kotlin.defineInlineFunction("stdlib.kotlin.sortByDescending_2kbc8r$", function($receiver, selector) {
+    if ($receiver.length > 1) {
+      _.kotlin.sortWith_pf0rc$($receiver, Kotlin.createObject(function() {
+        return[Kotlin.Comparator];
+      }, null, {compare:function(a, b) {
+        return _.kotlin.compareValues_cj5vqg$(selector(b), selector(a));
+      }}));
+    }
+  }), sortDescending_ehvuiv$:function($receiver) {
+    _.kotlin.sortWith_pf0rc$($receiver, _.kotlin.reverseOrder());
+  }, sortDescending_964n92$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_964n92$($receiver);
+    }
+  }, sortDescending_355nu0$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_355nu0$($receiver);
+    }
+  }, sortDescending_bvy38t$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_bvy38t$($receiver);
+    }
+  }, sortDescending_rjqrz0$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_rjqrz0$($receiver);
+    }
+  }, sortDescending_tmsbgp$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_tmsbgp$($receiver);
+    }
+  }, sortDescending_se6h4y$:function($receiver) {
+    if ($receiver.length > 1) {
+      _.kotlin.sort_se6h4y$($receiver);
+      _.kotlin.reverse_se6h4y$($receiver);
+    }
+  }, sortDescending_i2lc78$:function($receiver) {
+    if ($receiver.length > 1) {
+      Kotlin.primitiveArraySort($receiver);
+      _.kotlin.reverse_i2lc78$($receiver);
+    }
   }, sorted_ehvuiv$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_eg9ybj$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    return _.kotlin.asList_eg9ybj$(_.kotlin.sortedArray_ehvuiv$($receiver));
   }, sorted_964n92$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_964n92$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_964n92$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_355nu0$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_355nu0$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_355nu0$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_bvy38t$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_bvy38t$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_bvy38t$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_rjqrz0$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_rjqrz0$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_rjqrz0$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_tmsbgp$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_tmsbgp$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_tmsbgp$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_se6h4y$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_se6h4y$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_se6h4y$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sorted_i2lc78$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_i2lc78$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_i2lc78$($receiver);
+    _.kotlin.sort_ehvuiv$($receiver_0);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedArray_ehvuiv$:function($receiver) {
     if (_.kotlin.isEmpty_eg9ybj$($receiver)) {
       return $receiver;
@@ -6804,61 +7318,57 @@
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    _.kotlin.sortWith_pf0rc$($receiver_0, Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      return Kotlin.compareTo(b, a);
-    }}));
+    _.kotlin.sortWith_pf0rc$($receiver_0, _.kotlin.reverseOrder());
     return $receiver_0;
   }, sortedArrayDescending_964n92$:function($receiver) {
     if (_.kotlin.isEmpty_964n92$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_964n92$($receiver_0);
+    _.kotlin.sortDescending_964n92$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_355nu0$:function($receiver) {
     if (_.kotlin.isEmpty_355nu0$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_355nu0$($receiver_0);
+    _.kotlin.sortDescending_355nu0$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_bvy38t$:function($receiver) {
     if (_.kotlin.isEmpty_bvy38t$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_bvy38t$($receiver_0);
+    _.kotlin.sortDescending_bvy38t$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_rjqrz0$:function($receiver) {
     if (_.kotlin.isEmpty_rjqrz0$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_rjqrz0$($receiver_0);
+    _.kotlin.sortDescending_rjqrz0$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_tmsbgp$:function($receiver) {
     if (_.kotlin.isEmpty_tmsbgp$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_tmsbgp$($receiver_0);
+    _.kotlin.sortDescending_tmsbgp$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_se6h4y$:function($receiver) {
     if (_.kotlin.isEmpty_se6h4y$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    _.kotlin.sort_se6h4y$($receiver_0);
-    return _.kotlin.reversedArray_se6h4y$($receiver_0);
+    _.kotlin.sortDescending_se6h4y$($receiver_0);
+    return $receiver_0;
   }, sortedArrayDescending_i2lc78$:function($receiver) {
     if (_.kotlin.isEmpty_i2lc78$($receiver)) {
       return $receiver;
     }
     var $receiver_0 = $receiver.slice(0);
-    Kotlin.primitiveArraySort($receiver_0);
-    return _.kotlin.reversedArray_i2lc78$($receiver_0);
+    _.kotlin.sortDescending_i2lc78$($receiver_0);
+    return $receiver_0;
   }, sortedArrayWith_pf0rc$:function($receiver, comparator) {
     if (_.kotlin.isEmpty_eg9ybj$($receiver)) {
       return $receiver;
@@ -6975,11 +7485,7 @@
       return _.kotlin.compareValues_cj5vqg$(selector(b), selector(a));
     }}));
   }), sortedDescending_ehvuiv$:function($receiver) {
-    return _.kotlin.sortedWith_pf0rc$($receiver, Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      return Kotlin.compareTo(b, a);
-    }}));
+    return _.kotlin.sortedWith_pf0rc$($receiver, _.kotlin.reverseOrder());
   }, sortedDescending_964n92$:function($receiver) {
     var $receiver_0 = $receiver.slice(0);
     Kotlin.primitiveArraySort($receiver_0);
@@ -7009,41 +7515,39 @@
     Kotlin.primitiveArraySort($receiver_0);
     return _.kotlin.reversed_i2lc78$($receiver_0);
   }, sortedWith_pf0rc$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_eg9ybj$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    return _.kotlin.asList_eg9ybj$(_.kotlin.sortedArrayWith_pf0rc$($receiver, comparator));
   }, sortedWith_es41ir$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_l1lu5s$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_l1lu5s$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_g2jn7p$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_964n92$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_964n92$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_r5s4t3$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_355nu0$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_355nu0$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_1f7czx$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_bvy38t$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_bvy38t$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_w3205p$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_rjqrz0$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_rjqrz0$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_naiwod$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_tmsbgp$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_tmsbgp$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_jujh3x$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_se6h4y$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_se6h4y$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, sortedWith_bpm5rn$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_i2lc78$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    var $receiver_0 = _.kotlin.toTypedArray_i2lc78$($receiver);
+    _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+    return _.kotlin.asList_eg9ybj$($receiver_0);
   }, asIterable_eg9ybj$:function($receiver) {
     return Kotlin.createObject(function() {
       return[Kotlin.modules["builtins"].kotlin.Iterable];
@@ -8487,6 +8991,33 @@
       destination.add_za3rmp$(transform(index++, item));
     }
     return destination;
+  }), mapIndexedNotNull_d6xsp2$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNull_d6xsp2$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      var tmp$3;
+      (tmp$3 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$3, _.kotlin.f(destination)) : null;
+    }
+    return destination;
+  }), f:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapIndexedNotNullTo_2mku2i$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNullTo_2mku2i$", function($receiver, destination, transform) {
+    var tmp$0, tmp$1, tmp$2;
+    var index = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var item = tmp$0[tmp$2];
+      var index_0 = index++;
+      var tmp$3;
+      (tmp$3 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$3, _.kotlin.f(destination)) : null;
+    }
+    return destination;
   }), mapIndexedTo_2mku2i$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedTo_2mku2i$", function($receiver, destination, transform) {
     var tmp$0, tmp$1, tmp$2;
     var index = 0;
@@ -8574,19 +9105,21 @@
     tmp$0 = $receiver, tmp$1 = tmp$0.length;
     for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
       var element = tmp$0[tmp$2];
-      if (element != null) {
-        destination.add_za3rmp$(transform(element));
-      }
+      var tmp$3;
+      (tmp$3 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$3, _.kotlin.f_0(destination)) : null;
     }
     return destination;
-  }), mapNotNullTo_szs4zz$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_szs4zz$", function($receiver, destination, transform) {
+  }), f_0:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapNotNullTo_szs4zz$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_szs4zz$", function($receiver, destination, transform) {
     var tmp$0, tmp$1, tmp$2;
     tmp$0 = $receiver, tmp$1 = tmp$0.length;
     for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
       var element = tmp$0[tmp$2];
-      if (element != null) {
-        destination.add_za3rmp$(transform(element));
-      }
+      var tmp$3;
+      (tmp$3 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$3, _.kotlin.f_0(destination)) : null;
     }
     return destination;
   }), mapTo_szs4zz$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_szs4zz$", function($receiver, destination, transform) {
@@ -10066,7 +10599,7 @@
     return min;
   }, minBy_2kbc8r$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_2kbc8r$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_eg9ybj$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10083,7 +10616,7 @@
     return minElem;
   }), minBy_g2bjom$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_g2bjom$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_l1lu5s$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10100,7 +10633,7 @@
     return minElem;
   }), minBy_lmseli$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_lmseli$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_964n92$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10117,7 +10650,7 @@
     return minElem;
   }), minBy_xjz7li$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_xjz7li$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_355nu0$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10134,7 +10667,7 @@
     return minElem;
   }), minBy_7pamz8$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_7pamz8$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_bvy38t$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10151,7 +10684,7 @@
     return minElem;
   }), minBy_mn0nhi$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_mn0nhi$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_rjqrz0$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10168,7 +10701,7 @@
     return minElem;
   }), minBy_no6awq$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_no6awq$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_tmsbgp$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10185,7 +10718,7 @@
     return minElem;
   }), minBy_5sy41q$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_5sy41q$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_se6h4y$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10202,7 +10735,7 @@
     return minElem;
   }), minBy_urwa3e$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_urwa3e$", function($receiver, f) {
     var tmp$0;
-    if ($receiver.length === 0) {
+    if (_.kotlin.isEmpty_i2lc78$($receiver)) {
       return null;
     }
     var minElem = $receiver[0];
@@ -10731,286 +11264,7 @@
       }
     }
     return $receiver;
-  }, merge_2rmu0o$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_2rmu0o$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_pnti4b$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_pnti4b$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_4t7xkx$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_4t7xkx$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_b8vhfj$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_b8vhfj$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_9xp40v$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_9xp40v$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_49cwib$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_49cwib$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_uo1iqb$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_uo1iqb$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_9x7n3z$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_9x7n3z$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_em1vhp$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_em1vhp$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_ujqlps$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_ujqlps$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_9zfo4u$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_9zfo4u$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_grqpda$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_grqpda$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_g1c01a$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_g1c01a$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_kxvwwg$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_kxvwwg$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_mp4cls$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_mp4cls$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_83qj9u$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_83qj9u$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_xs8ib4$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_xs8ib4$", function($receiver, array, transform) {
-    var tmp$0;
-    var size = Math.min($receiver.length, array.length);
-    var list = new Kotlin.ArrayList(size);
-    tmp$0 = size - 1;
-    for (var i = 0;i <= tmp$0;i++) {
-      list.add_za3rmp$(transform($receiver[i], array[i]));
-    }
-    return list;
-  }), merge_fgkvv1$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_fgkvv1$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_p4xgx4$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_p4xgx4$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_yo3mgu$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_yo3mgu$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_i7hgbm$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_i7hgbm$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_ci00lw$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_ci00lw$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_nebsgo$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_nebsgo$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_cn78xk$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_cn78xk$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_g87lp2$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_g87lp2$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), merge_i7y9t4$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_i7y9t4$", function($receiver, other, transform) {
-    var tmp$0;
-    var arraySize = $receiver.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10), arraySize));
-    var i = 0;
-    tmp$0 = other.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform($receiver[i++], element));
-    }
-    return list;
-  }), partition_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.partition_dgtl0h$", function($receiver, predicate) {
+  }, partition_dgtl0h$:Kotlin.defineInlineFunction("stdlib.kotlin.partition_dgtl0h$", function($receiver, predicate) {
     var tmp$0, tmp$1, tmp$2;
     var first = new Kotlin.ArrayList;
     var second = new Kotlin.ArrayList;
@@ -11703,7 +11957,7 @@
       list.add_za3rmp$(transform($receiver[i++], element));
     }
     return list;
-  }), joinTo_xe80ii$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+  }), joinTo_7uchso$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
     var tmp$0, tmp$1, tmp$2;
     if (separator === void 0) {
       separator = ", ";
@@ -11732,8 +11986,11 @@
         buffer.append(separator);
       }
       if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element == null ? "null" : element.toString();
-        buffer.append(text);
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element == null ? "null" : element.toString());
+        }
       } else {
         break;
       }
@@ -11743,8 +12000,371 @@
     }
     buffer.append(postfix);
     return buffer;
+  }, joinTo_q1okz1$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_barwct$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_at1d3j$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_5dssjp$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_a0zr9v$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_w9i6k3$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0, tmp$1, tmp$2;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = $receiver, tmp$1 = tmp$0.length;
+    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
+      var element = tmp$0[tmp$2];
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_ac0spn$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_2qnkcz$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    var tmp$0;
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    buffer.append(prefix);
+    var count = 0;
+    tmp$0 = Kotlin.arrayIterator($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (++count > 1) {
+        buffer.append(separator);
+      }
+      if (limit < 0 || count <= limit) {
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element.toString());
+        }
+      } else {
+        break;
+      }
+    }
+    if (limit >= 0 && count > limit) {
+      buffer.append(truncated);
+    }
+    buffer.append(postfix);
+    return buffer;
+  }, joinTo_xe80ii$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_7uchso$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_4upk1x$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11763,28 +12383,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_q1okz1$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_glkf8z$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11803,28 +12403,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_barwct$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_atvkrt$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11843,28 +12423,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_at1d3j$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_x5umxt$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11883,28 +12443,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_5dssjp$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_15mxmt$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11923,28 +12463,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_a0zr9v$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_2j1up1$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0, tmp$1, tmp$2;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -11963,28 +12483,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = $receiver, tmp$1 = tmp$0.length;
-    for (var tmp$2 = 0;tmp$2 !== tmp$1;++tmp$2) {
-      var element = tmp$0[tmp$2];
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_w9i6k3$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_on4ll7$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -12003,28 +12503,8 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
-    }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
-    }
-    buffer.append(postfix);
-    return buffer;
+    return _.kotlin.joinTo_ac0spn$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
   }, joinTo_6qjsg5$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
-    var tmp$0;
     if (separator === void 0) {
       separator = ", ";
     }
@@ -12043,26 +12523,187 @@
     if (transform === void 0) {
       transform = null;
     }
-    buffer.append(prefix);
-    var count = 0;
-    tmp$0 = Kotlin.arrayIterator($receiver);
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (++count > 1) {
-        buffer.append(separator);
-      }
-      if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element.toString();
-        buffer.append(text);
-      } else {
-        break;
-      }
+    return _.kotlin.joinTo_2qnkcz$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
+  }, joinToString_qtax42$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
     }
-    if (limit >= 0 && count > limit) {
-      buffer.append(truncated);
+    if (prefix === void 0) {
+      prefix = "";
     }
-    buffer.append(postfix);
-    return buffer;
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_7uchso$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_tyzo35$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_q1okz1$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_k0u3cz$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_barwct$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_d1dl19$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_at1d3j$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_47ib1f$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_5dssjp$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_92s1ft$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_a0zr9v$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_gctiqr$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_w9i6k3$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_kp0x6r$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_ac0spn$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+  }, joinToString_av5xiv$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_2qnkcz$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_rao0bw$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12082,7 +12723,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_xe80ii$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_7uchso$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_rmdfb3$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12102,7 +12743,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_4upk1x$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_q1okz1$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_hq2pjx$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12122,7 +12763,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_glkf8z$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_barwct$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_gaad7n$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12142,7 +12783,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_atvkrt$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_at1d3j$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_mb5ykj$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12162,7 +12803,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_x5umxt$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_5dssjp$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_zi1aqx$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12182,7 +12823,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_15mxmt$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_a0zr9v$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_2dt2kv$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12202,7 +12843,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_2j1up1$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_w9i6k3$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_suzjj7$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12222,7 +12863,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_on4ll7$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_ac0spn$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_c3t621$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -12242,7 +12883,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_6qjsg5$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_2qnkcz$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, asSequence_eg9ybj$:function($receiver) {
     if (_.kotlin.isEmpty_eg9ybj$($receiver)) {
       return _.kotlin.emptySequence();
@@ -12596,7 +13237,7 @@
     var tmp$0;
     if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.List)) {
       var tmp$1;
-      tmp$1 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+      tmp$1 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
       while (tmp$1.hasNext()) {
         var index = tmp$1.next();
         var element_0 = $receiver.get_za3lpa$(index);
@@ -12617,7 +13258,7 @@
     return last;
   }), findLast_rw062o$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_rw062o$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver.get_za3lpa$(index);
@@ -12738,7 +13379,7 @@
     return lastIndex;
   }), indexOfLast_rw062o$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_rw062o$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver.get_za3lpa$(index))) {
@@ -12777,7 +13418,7 @@
     var tmp$0;
     if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.List)) {
       var tmp$1;
-      tmp$1 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+      tmp$1 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
       while (tmp$1.hasNext()) {
         var index = tmp$1.next();
         var element_0 = $receiver.get_za3lpa$(index);
@@ -12803,7 +13444,7 @@
     return last;
   }), last_rw062o$:Kotlin.defineInlineFunction("stdlib.kotlin.last_rw062o$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver.get_za3lpa$(index);
@@ -12854,7 +13495,7 @@
     var tmp$0;
     if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.List)) {
       var tmp$1;
-      tmp$1 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+      tmp$1 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
       while (tmp$1.hasNext()) {
         var index = tmp$1.next();
         var element_0 = $receiver.get_za3lpa$(index);
@@ -12875,7 +13516,7 @@
     return last;
   }), lastOrNull_rw062o$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_rw062o$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_4m3c68$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var element = $receiver.get_za3lpa$(index);
@@ -13057,6 +13698,31 @@
       }
     }
     return destination;
+  }), filterIndexed_j68grb$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_j68grb$", function($receiver, predicate) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterIndexedTo_nkmhzl$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_nkmhzl$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
   }), filterNot_azvtw4$:Kotlin.defineInlineFunction("stdlib.kotlin.filterNot_azvtw4$", function($receiver, predicate) {
     var destination = new Kotlin.ArrayList;
     var tmp$0;
@@ -13185,17 +13851,45 @@
       list.add_za3rmp$(item);
     }
     return list;
-  }), reversed_ir3nkc$:function($receiver) {
+  }), reverse_tnw3fw$:function($receiver) {
+    _.java.util.Collections.reverse_a4ebza$($receiver);
+  }, reversed_ir3nkc$:function($receiver) {
     if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.Collection) && $receiver.isEmpty()) {
       return _.kotlin.emptyList();
     }
     var list = _.kotlin.toArrayList_ir3nkc$($receiver);
     _.java.util.Collections.reverse_a4ebza$(list);
     return list;
+  }, sortBy_uab9ty$:Kotlin.defineInlineFunction("stdlib.kotlin.sortBy_uab9ty$", function($receiver, selector) {
+    if ($receiver.size > 1) {
+      _.kotlin.sortWith_befwer$($receiver, Kotlin.createObject(function() {
+        return[Kotlin.Comparator];
+      }, null, {compare:function(a, b) {
+        return _.kotlin.compareValues_cj5vqg$(selector(a), selector(b));
+      }}));
+    }
+  }), sortByDescending_uab9ty$:Kotlin.defineInlineFunction("stdlib.kotlin.sortByDescending_uab9ty$", function($receiver, selector) {
+    if ($receiver.size > 1) {
+      _.kotlin.sortWith_befwer$($receiver, Kotlin.createObject(function() {
+        return[Kotlin.Comparator];
+      }, null, {compare:function(a, b) {
+        return _.kotlin.compareValues_cj5vqg$(selector(b), selector(a));
+      }}));
+    }
+  }), sortDescending_lglzam$:function($receiver) {
+    _.kotlin.sortWith_befwer$($receiver, _.kotlin.reverseOrder());
   }, sorted_77rvyy$:function($receiver) {
-    var sortedList = _.kotlin.toArrayList_ir3nkc$($receiver);
-    _.java.util.Collections.sort_a4ebza$(sortedList);
-    return sortedList;
+    if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.Collection)) {
+      if ($receiver.size <= 1) {
+        return _.kotlin.toArrayList_4m3c68$($receiver);
+      }
+      var $receiver_0 = Kotlin.copyToArray($receiver);
+      _.kotlin.sort_ehvuiv$($receiver_0);
+      return _.kotlin.asList_eg9ybj$($receiver_0);
+    }
+    var $receiver_1 = _.kotlin.toArrayList_ir3nkc$($receiver);
+    _.kotlin.sort_lglzam$($receiver_1);
+    return $receiver_1;
   }, sortedBy_cvgzri$:Kotlin.defineInlineFunction("stdlib.kotlin.sortedBy_cvgzri$", function($receiver, selector) {
     return _.kotlin.sortedWith_r48qxn$($receiver, Kotlin.createObject(function() {
       return[Kotlin.Comparator];
@@ -13209,15 +13903,19 @@
       return _.kotlin.compareValues_cj5vqg$(selector(b), selector(a));
     }}));
   }), sortedDescending_77rvyy$:function($receiver) {
-    return _.kotlin.sortedWith_r48qxn$($receiver, Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      return Kotlin.compareTo(b, a);
-    }}));
+    return _.kotlin.sortedWith_r48qxn$($receiver, _.kotlin.reverseOrder());
   }, sortedWith_r48qxn$:function($receiver, comparator) {
-    var sortedList = _.kotlin.toArrayList_ir3nkc$($receiver);
-    _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
-    return sortedList;
+    if (Kotlin.isType($receiver, Kotlin.modules["builtins"].kotlin.Collection)) {
+      if ($receiver.size <= 1) {
+        return _.kotlin.toArrayList_4m3c68$($receiver);
+      }
+      var $receiver_0 = Kotlin.copyToArray($receiver);
+      _.kotlin.sortWith_pf0rc$($receiver_0, comparator);
+      return _.kotlin.asList_eg9ybj$($receiver_0);
+    }
+    var $receiver_1 = _.kotlin.toArrayList_ir3nkc$($receiver);
+    _.kotlin.sortWith_befwer$($receiver_1, comparator);
+    return $receiver_1;
   }, toBooleanArray_uv2mg4$:function($receiver) {
     var tmp$0;
     var result = Kotlin.booleanArrayOfSize($receiver.size);
@@ -13436,6 +14134,33 @@
       destination.add_za3rmp$(transform(index++, item));
     }
     return destination;
+  }), mapIndexedNotNull_v62v4j$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNull_v62v4j$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      var tmp$1;
+      (tmp$1 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_1(destination)) : null;
+    }
+    return destination;
+  }), f_1:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapIndexedNotNullTo_maj2dp$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNullTo_maj2dp$", function($receiver, destination, transform) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      var tmp$1;
+      (tmp$1 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_1(destination)) : null;
+    }
+    return destination;
   }), mapIndexedTo_maj2dp$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedTo_maj2dp$", function($receiver, destination, transform) {
     var tmp$0;
     var index = 0;
@@ -13451,19 +14176,21 @@
     tmp$0 = $receiver.iterator();
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
-      if (element != null) {
-        destination.add_za3rmp$(transform(element));
-      }
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_2(destination)) : null;
     }
     return destination;
-  }), mapNotNullTo_e7zafy$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_e7zafy$", function($receiver, destination, transform) {
+  }), f_2:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapNotNullTo_e7zafy$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_e7zafy$", function($receiver, destination, transform) {
     var tmp$0;
     tmp$0 = $receiver.iterator();
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
-      if (element != null) {
-        destination.add_za3rmp$(transform(element));
-      }
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_2(destination)) : null;
     }
     return destination;
   }), mapTo_e7zafy$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_e7zafy$", function($receiver, destination, transform) {
@@ -13730,29 +14457,7 @@
       }
     }
     return $receiver;
-  }, merge_p1psij$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_p1psij$", function($receiver, array, transform) {
-    var tmp$0;
-    var arraySize = array.length;
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$($receiver, 10), arraySize));
-    var i = 0;
-    tmp$0 = $receiver.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (i >= arraySize) {
-        break;
-      }
-      list.add_za3rmp$(transform(element, array[i++]));
-    }
-    return list;
-  }), merge_gha5vk$:Kotlin.defineInlineFunction("stdlib.kotlin.merge_gha5vk$", function($receiver, other, transform) {
-    var first = $receiver.iterator();
-    var second = other.iterator();
-    var list = new Kotlin.ArrayList(Math.min(_.kotlin.collectionSizeOrDefault_pjxt3m$($receiver, 10), _.kotlin.collectionSizeOrDefault_pjxt3m$(other, 10)));
-    while (first.hasNext() && second.hasNext()) {
-      list.add_za3rmp$(transform(first.next(), second.next()));
-    }
-    return list;
-  }), minus_d4bm6z$:function($receiver, array) {
+  }, minus_d4bm6z$:function($receiver, array) {
     if (_.kotlin.isEmpty_eg9ybj$(array)) {
       return _.kotlin.toList_ir3nkc$($receiver);
     }
@@ -13936,7 +14641,7 @@
       list.add_za3rmp$(transform(first.next(), second.next()));
     }
     return list;
-  }), joinTo_3o8ep9$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+  }), joinTo_pzhnk5$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
     var tmp$0;
     if (separator === void 0) {
       separator = ", ";
@@ -13965,8 +14670,11 @@
         buffer.append(separator);
       }
       if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element == null ? "null" : element.toString();
-        buffer.append(text);
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element == null ? "null" : element.toString());
+        }
       } else {
         break;
       }
@@ -13976,6 +14684,46 @@
     }
     buffer.append(postfix);
     return buffer;
+  }, joinTo_3o8ep9$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_pzhnk5$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
+  }, joinToString_sdec0h$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_pzhnk5$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_aw7tsx$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -13995,7 +14743,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_3o8ep9$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_pzhnk5$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, asSequence_ir3nkc$:function($receiver) {
     return Kotlin.createObject(function() {
       return[_.kotlin.Sequence];
@@ -14144,6 +14892,29 @@
       destination.add_za3rmp$(transform(index++, item));
     }
     return destination;
+  }), mapNotNull_6spdrr$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNull_6spdrr$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_acfufl$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_3(destination)) : null;
+    }
+    return destination;
+  }), f_3:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapNotNullTo_wh7ed$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_wh7ed$", function($receiver, destination, transform) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_acfufl$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_3(destination)) : null;
+    }
+    return destination;
   }), mapTo_wh7ed$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_wh7ed$", function($receiver, destination, transform) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_acfufl$($receiver);
@@ -14258,64 +15029,124 @@
     }});
   }, contains_7pjqzb$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_jgqbcl$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_xp6wnc$:function($receiver, item) {
     return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.end) <= 0;
+  }, contains_rd8hv0$:function($receiver, item) {
+    return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.endInclusive) <= 0;
   }, contains_xyqnqi$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_cbleoy$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_ha2jvx$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_vk7joh$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_eyikae$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_9s9f9a$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_ml3hb4$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_np8l4c$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_3tdjlb$:function($receiver, item) {
     return $receiver.start.toNumber() <= item && item <= $receiver.end.toNumber();
+  }, contains_i3ijdv$:function($receiver, item) {
+    return $receiver.start.toNumber() <= item && item <= $receiver.endInclusive.toNumber();
   }, contains_jxvgcb$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_y80g4v$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_x1jnyl$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_lfxw9z$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_qc6k19$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_s5b07b$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_pymub1$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_z3sk7b$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_kprxpg$:function($receiver, item) {
     return $receiver.start.toNumber() <= item && item <= $receiver.end.toNumber();
+  }, contains_4101u8$:function($receiver, item) {
+    return $receiver.start.toNumber() <= item && item <= $receiver.endInclusive.toNumber();
   }, contains_gniymw$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_8390ws$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_chrlza$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_qrwlru$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_wmo35d$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_g31let$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_a937e7$:function($receiver, item) {
     return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.end) <= 0;
+  }, contains_gx6uxp$:function($receiver, item) {
+    return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.endInclusive) <= 0;
   }, contains_jf6vuj$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_7r36hd$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_13g3d9$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_b24qu1$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_hru4sk$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_sihxmw$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_vlggrx$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_tgyxqf$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_7ppxaj$:function($receiver, item) {
     return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.end)) <= 0;
+  }, contains_jgk51d$:function($receiver, item) {
+    return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.endInclusive)) <= 0;
   }, contains_xu2x4g$:function($receiver, item) {
     return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.end)) <= 0;
+  }, contains_r8chdw$:function($receiver, item) {
+    return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.endInclusive)) <= 0;
   }, contains_xywu1q$:function($receiver, item) {
     return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.end)) <= 0;
+  }, contains_cbf8dq$:function($receiver, item) {
+    return Kotlin.Long.fromInt($receiver.start).compareTo_za3rmp$(item) <= 0 && item.compareTo_za3rmp$(Kotlin.Long.fromInt($receiver.endInclusive)) <= 0;
   }, contains_h9wdkp$:function($receiver, item) {
     return $receiver.start <= item.toNumber() && item.toNumber() <= $receiver.end;
+  }, contains_vk1dd9$:function($receiver, item) {
+    return $receiver.start <= item.toNumber() && item.toNumber() <= $receiver.endInclusive;
   }, contains_eycdz6$:function($receiver, item) {
     return $receiver.start <= item.toNumber() && item.toNumber() <= $receiver.end;
+  }, contains_9sflki$:function($receiver, item) {
+    return $receiver.start <= item.toNumber() && item.toNumber() <= $receiver.endInclusive;
   }, contains_q5pmh9$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_ywps13$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_kip5j8$:function($receiver, item) {
     return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.end) <= 0;
+  }, contains_482u0g$:function($receiver, item) {
+    return $receiver.start.compareTo_za3rmp$(Kotlin.Long.fromInt(item)) <= 0 && Kotlin.Long.fromInt(item).compareTo_za3rmp$($receiver.endInclusive) <= 0;
   }, contains_ggg6go$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_8abt30$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_wtqvbl$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_ga4dl1$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, contains_xqugvu$:function($receiver, item) {
     return $receiver.start <= item && item <= $receiver.end;
+  }, contains_jgph3a$:function($receiver, item) {
+    return $receiver.start <= item && item <= $receiver.endInclusive;
   }, downTo_2jcion$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_jzdo0$:function($receiver, to) {
@@ -14324,36 +15155,8 @@
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_9r634a$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_stl18b$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_kquaae$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_sd97h4$:function($receiver, to) {
     return new Kotlin.CharProgression($receiver, to, -1);
-  }, downTo_mmqya6$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_y0unuv$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver.toNumber(), to, -1);
-  }, downTo_tylosb$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_2lzxtr$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_541hxq$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_mdktgh$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_7kp9et$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_h9fjhw$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver.toNumber(), to, -1);
-  }, downTo_he5dns$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_i7toya$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_tzbfcv$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_3w14zy$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_rksjo2$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_mw85q1$:function($receiver, to) {
@@ -14361,10 +15164,6 @@
   }, downTo_y20kcl$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_rt69vj$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_aiyy8i$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_jyaijj$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_2j6cdf$:function($receiver, to) {
     return new Kotlin.LongProgression(Kotlin.Long.fromInt($receiver), to, Kotlin.Long.NEG_ONE);
@@ -14374,10 +15173,6 @@
     return new Kotlin.LongProgression(Kotlin.Long.fromInt($receiver), to, Kotlin.Long.NEG_ONE);
   }, downTo_9qzwt2$:function($receiver, to) {
     return new Kotlin.LongProgression(Kotlin.Long.fromInt($receiver), to, Kotlin.Long.NEG_ONE);
-  }, downTo_steux3$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to.toNumber(), -1);
-  }, downTo_kr0glm$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to.toNumber(), -1);
   }, downTo_7dmh8l$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_hgibo4$:function($receiver, to) {
@@ -14386,98 +15181,64 @@
     return new Kotlin.NumberProgression($receiver, to, -1);
   }, downTo_i0qws2$:function($receiver, to) {
     return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_u6e7j3$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, downTo_433x66$:function($receiver, to) {
-    return new Kotlin.NumberProgression($receiver, to, -1);
-  }, reversed_pdyjc8$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -$receiver.increment);
   }, reversed_qzzn7u$:function($receiver) {
-    return new Kotlin.CharProgression($receiver.end, $receiver.start, -$receiver.increment);
+    return new Kotlin.CharProgression($receiver.last, $receiver.first, -$receiver.increment);
   }, reversed_d4iyj9$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -$receiver.increment);
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -$receiver.increment);
   }, reversed_g7uuvw$:function($receiver) {
-    return new Kotlin.LongProgression($receiver.end, $receiver.start, $receiver.increment.unaryMinus());
-  }, reversed_5wpe3m$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -$receiver.increment);
-  }, reversed_1ds0m2$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -1);
+    return new Kotlin.LongProgression($receiver.last, $receiver.first, $receiver.increment.unaryMinus());
   }, reversed_4n6yt0$:function($receiver) {
-    return new Kotlin.CharProgression($receiver.end, $receiver.start, -1);
+    return new Kotlin.CharProgression($receiver.last, $receiver.first, -1);
   }, reversed_lufotp$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -1);
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -1);
   }, reversed_kltuhy$:function($receiver) {
-    return new Kotlin.LongProgression($receiver.end, $receiver.start, Kotlin.Long.NEG_ONE);
+    return new Kotlin.LongProgression($receiver.last, $receiver.first, Kotlin.Long.NEG_ONE);
+  }, reversed_pdyjc8$:function($receiver) {
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -$receiver.increment);
+  }, reversed_5wpe3m$:function($receiver) {
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -$receiver.increment);
+  }, reversed_1ds0m2$:function($receiver) {
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -1);
   }, reversed_puxyu8$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -1);
-  }, reversed_d5pk0f$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -$receiver.increment);
-  }, reversed_ymeagu$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -$receiver.increment);
-  }, reversed_43lglt$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -1);
-  }, reversed_jre5c0$:function($receiver) {
-    return new Kotlin.NumberProgression($receiver.end, $receiver.start, -1);
-  }, step_3qe6kq$:function($receiver, step) {
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
+    return new Kotlin.NumberProgression($receiver.last, $receiver.first, -1);
   }, step_ojzq8o$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.CharProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
+    return new Kotlin.CharProgression($receiver.first, $receiver.last, $receiver.increment > 0 ? step : -step);
   }, step_v9dsax$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, $receiver.increment > 0 ? step : -step);
   }, step_nohp0z$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step.compareTo_za3rmp$(Kotlin.Long.fromInt(0)) > 0, step);
-    return new Kotlin.LongProgression($receiver.start, $receiver.end, $receiver.increment.compareTo_za3rmp$(Kotlin.Long.fromInt(0)) > 0 ? step : step.unaryMinus());
-  }, step_45hz7g$:function($receiver, step) {
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
-  }, step_75f6t4$:function($receiver, step) {
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, step);
+    return new Kotlin.LongProgression($receiver.first, $receiver.last, $receiver.increment.compareTo_za3rmp$(Kotlin.Long.fromInt(0)) > 0 ? step : step.unaryMinus());
   }, step_oljp4a$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.CharProgression($receiver.start, $receiver.end, step);
+    return new Kotlin.CharProgression($receiver.first, $receiver.last, step);
   }, step_47wvud$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, step);
   }, step_2quimn$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step.compareTo_za3rmp$(Kotlin.Long.fromInt(0)) > 0, step);
-    return new Kotlin.LongProgression($receiver.start, $receiver.end, step);
+    return new Kotlin.LongProgression($receiver.first, $receiver.last, step);
+  }, step_3qe6kq$:function($receiver, step) {
+    _.kotlin.checkStepIsPositive(step > 0, step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, $receiver.increment > 0 ? step : -step);
+  }, step_45hz7g$:function($receiver, step) {
+    _.kotlin.checkStepIsPositive(step > 0, step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, $receiver.increment > 0 ? step : -step);
+  }, step_75f6t4$:function($receiver, step) {
+    _.kotlin.checkStepIsPositive(step > 0, step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, step);
   }, step_tuqr5q$:function($receiver, step) {
     _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, step);
-  }, step_ka6ld9$:function($receiver, step) {
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
-  }, step_pdx18x$:function($receiver, step) {
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, $receiver.increment > 0 ? step : -step);
-  }, step_ii3gep$:function($receiver, step) {
-    if (_.kotlin.isNaN_yrwdxs$(step)) {
-      throw new Kotlin.IllegalArgumentException("Step must not be NaN.");
-    }
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, step);
-  }, step_3dzzwv$:function($receiver, step) {
-    if (_.kotlin.isNaN_81szl$(step)) {
-      throw new Kotlin.IllegalArgumentException("Step must not be NaN.");
-    }
-    _.kotlin.checkStepIsPositive(step > 0, step);
-    return new Kotlin.NumberProgression($receiver.start, $receiver.end, step);
+    return new Kotlin.NumberProgression($receiver.first, $receiver.last, step);
   }, until_2jcion$:function($receiver, to) {
     return new Kotlin.NumberRange($receiver, to - 1);
   }, until_jzdo0$:function($receiver, to) {
     return $receiver.rangeTo(Kotlin.Long.fromInt(to).subtract(Kotlin.Long.fromInt(1)));
   }, until_9q324c$:function($receiver, to) {
-    var to_ = Kotlin.toByte(to - 1);
-    if (to_ > to) {
-      throw new Kotlin.IllegalArgumentException("The to argument value '" + to + "' was too small.");
-    }
-    return new Kotlin.NumberRange($receiver, to_);
+    return new Kotlin.NumberRange($receiver, to - 1);
   }, until_9r634a$:function($receiver, to) {
-    return new Kotlin.NumberRange($receiver, Kotlin.toShort(to - 1));
+    return new Kotlin.NumberRange($receiver, to - 1);
   }, until_sd97h4$:function($receiver, to) {
     var to_ = Kotlin.toChar(to.charCodeAt(0) - 1);
     if (to_ > to) {
@@ -14533,17 +15294,9 @@
   }, until_hgibo4$:function($receiver, to) {
     return $receiver.rangeTo(Kotlin.Long.fromInt(to).subtract(Kotlin.Long.fromInt(1)));
   }, until_hl85u0$:function($receiver, to) {
-    var to_ = Kotlin.toShort(to - 1);
-    if (to_ > to) {
-      throw new Kotlin.IllegalArgumentException("The to argument value '" + to + "' was too small.");
-    }
-    return new Kotlin.NumberRange($receiver, to_);
+    return new Kotlin.NumberRange($receiver, to - 1);
   }, until_i0qws2$:function($receiver, to) {
-    var to_ = Kotlin.toShort(to - 1);
-    if (to_ > to) {
-      throw new Kotlin.IllegalArgumentException("The to argument value '" + to + "' was too small.");
-    }
-    return new Kotlin.NumberRange($receiver, to_);
+    return new Kotlin.NumberRange($receiver, to - 1);
   }, coerceAtLeast_n1zt5e$:function($receiver, minimumValue) {
     return Kotlin.compareTo($receiver, minimumValue) < 0 ? minimumValue : $receiver;
   }, coerceAtLeast_9q324c$:function($receiver, minimumValue) {
@@ -14712,6 +15465,26 @@
       }
     }
     return $receiver;
+  }, coerceIn_w8qafn$:function($receiver, range) {
+    if (range.isEmpty()) {
+      throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
+    }
+    return Kotlin.compareTo($receiver, range.start) < 0 ? range.start : Kotlin.compareTo($receiver, range.endInclusive) > 0 ? range.endInclusive : $receiver;
+  }, coerceIn_s9wowg$:function($receiver, range) {
+    if (range.isEmpty()) {
+      throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
+    }
+    return $receiver < range.start ? range.start : $receiver > range.endInclusive ? range.endInclusive : $receiver;
+  }, coerceIn_up5kzs$:function($receiver, range) {
+    if (range.isEmpty()) {
+      throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
+    }
+    return $receiver.compareTo_za3rmp$(range.start) < 0 ? range.start : $receiver.compareTo_za3rmp$(range.endInclusive) > 0 ? range.endInclusive : $receiver;
+  }, coerceIn_h05g2n$:function($receiver, range) {
+    if (range.isEmpty()) {
+      throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
+    }
+    return Kotlin.compareTo($receiver, range.start) < 0 ? range.start : Kotlin.compareTo($receiver, range.end) > 0 ? range.end : $receiver;
   }, coerceIn_zf1tok$:function($receiver, range) {
     if (range.isEmpty()) {
       throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
@@ -14732,11 +15505,6 @@
       throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
     }
     return $receiver < range.start ? range.start : $receiver > range.end ? range.end : $receiver;
-  }, coerceIn_h05g2n$:function($receiver, range) {
-    if (range.isEmpty()) {
-      throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
-    }
-    return Kotlin.compareTo($receiver, range.start) < 0 ? range.start : Kotlin.compareTo($receiver, range.end) > 0 ? range.end : $receiver;
   }, coerceIn_b60x24$:function($receiver, range) {
     if (range.isEmpty()) {
       throw new Kotlin.IllegalArgumentException("Cannot coerce value to an empty range: " + range + ".");
@@ -15012,7 +15780,27 @@
     return new _.kotlin.DropWhileSequence($receiver, predicate);
   }, filter_gzrcl9$:function($receiver, predicate) {
     return new _.kotlin.FilteringSequence($receiver, true, predicate);
-  }, filterNot_gzrcl9$:function($receiver, predicate) {
+  }, filterIndexed_rvcvs8$f:function(predicate) {
+    return function(it) {
+      return predicate(it.index, it.value);
+    };
+  }, filterIndexed_rvcvs8$f_0:function(it) {
+    return it.value;
+  }, filterIndexed_rvcvs8$:function($receiver, predicate) {
+    return new _.kotlin.TransformingSequence(new _.kotlin.FilteringSequence(new _.kotlin.IndexingSequence($receiver), true, _.kotlin.filterIndexed_rvcvs8$f(predicate)), _.kotlin.filterIndexed_rvcvs8$f_0);
+  }, filterIndexedTo_aelhpc$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_aelhpc$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.add_za3rmp$(item);
+      }
+    }
+    return destination;
+  }), filterNot_gzrcl9$:function($receiver, predicate) {
     return new _.kotlin.FilteringSequence($receiver, false, predicate);
   }, filterNotNull_dzwiqr$f:function(it) {
     return it == null;
@@ -15062,7 +15850,7 @@
       return[_.kotlin.Sequence];
     }, null, {iterator:function() {
       var sortedList = _.kotlin.toArrayList_dzwiqr$($receiver);
-      _.java.util.Collections.sort_a4ebza$(sortedList);
+      _.kotlin.sort_lglzam$(sortedList);
       return sortedList.iterator();
     }});
   }, sortedBy_yde4f1$:Kotlin.defineInlineFunction("stdlib.kotlin.sortedBy_yde4f1$", function($receiver, selector) {
@@ -15078,17 +15866,13 @@
       return _.kotlin.compareValues_cj5vqg$(selector(b), selector(a));
     }}));
   }), sortedDescending_xiv8mh$:function($receiver) {
-    return _.kotlin.sortedWith_1b8tkm$($receiver, Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      return Kotlin.compareTo(b, a);
-    }}));
+    return _.kotlin.sortedWith_1b8tkm$($receiver, _.kotlin.reverseOrder());
   }, sortedWith_1b8tkm$:function($receiver, comparator) {
     return Kotlin.createObject(function() {
       return[_.kotlin.Sequence];
     }, null, {iterator:function() {
       var sortedList = _.kotlin.toArrayList_dzwiqr$($receiver);
-      _.java.util.Collections.sort_a7cel1$(sortedList, comparator);
+      _.kotlin.sortWith_befwer$(sortedList, comparator);
       return sortedList.iterator();
     }});
   }, toArrayList_dzwiqr$:function($receiver) {
@@ -15198,7 +15982,24 @@
     return new _.kotlin.TransformingSequence($receiver, transform);
   }, mapIndexed_jchqxw$:function($receiver, transform) {
     return new _.kotlin.TransformingIndexedSequence($receiver, transform);
-  }, mapIndexedTo_4csz4s$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedTo_4csz4s$", function($receiver, destination, transform) {
+  }, mapIndexedNotNull_jchqxw$:function($receiver, transform) {
+    return _.kotlin.filterNotNull_dzwiqr$(new _.kotlin.TransformingIndexedSequence($receiver, transform));
+  }, f_4:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapIndexedNotNullTo_4csz4s$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNullTo_4csz4s$", function($receiver, destination, transform) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      var tmp$1;
+      (tmp$1 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_4(destination)) : null;
+    }
+    return destination;
+  }), mapIndexedTo_4csz4s$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedTo_4csz4s$", function($receiver, destination, transform) {
     var tmp$0;
     var index = 0;
     tmp$0 = $receiver.iterator();
@@ -15207,18 +16008,19 @@
       destination.add_za3rmp$(transform(index++, item));
     }
     return destination;
-  }), mapNotNull_hg3um1$f:function(it) {
-    return it == null;
-  }, mapNotNull_hg3um1$:function($receiver, transform) {
-    return new _.kotlin.TransformingSequence(new _.kotlin.FilteringSequence($receiver, false, _.kotlin.mapNotNull_hg3um1$f), transform);
+  }), mapNotNull_hg3um1$:function($receiver, transform) {
+    return _.kotlin.filterNotNull_dzwiqr$(new _.kotlin.TransformingSequence($receiver, transform));
+  }, f_5:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
   }, mapNotNullTo_cn1o9b$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_cn1o9b$", function($receiver, destination, transform) {
     var tmp$0;
     tmp$0 = $receiver.iterator();
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
-      if (element != null) {
-        destination.add_za3rmp$(transform(element));
-      }
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_5(destination)) : null;
     }
     return destination;
   }), mapTo_cn1o9b$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_cn1o9b$", function($receiver, destination, transform) {
@@ -15431,8 +16233,6 @@
     };
   }, requireNoNulls_dzwiqr$:function($receiver) {
     return _.kotlin.map_hg3um1$($receiver, _.kotlin.requireNoNulls_dzwiqr$f($receiver));
-  }, merge_7i6ftq$:function($receiver, sequence, transform) {
-    return _.kotlin.zip_7i6ftq$($receiver, sequence, transform);
   }, iterator$f:function(other) {
     return function(it) {
       return other.contains_za3rmp$(it);
@@ -15521,7 +16321,7 @@
     return new _.kotlin.MergingSequence($receiver, sequence, _.kotlin.zip_ponuus$f);
   }, zip_7i6ftq$:function($receiver, sequence, transform) {
     return new _.kotlin.MergingSequence($receiver, sequence, transform);
-  }, joinTo_ww5rgk$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+  }, joinTo_vo1v1y$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
     var tmp$0;
     if (separator === void 0) {
       separator = ", ";
@@ -15550,8 +16350,11 @@
         buffer.append(separator);
       }
       if (limit < 0 || count <= limit) {
-        var text = transform != null ? transform(element) : element == null ? "null" : element.toString();
-        buffer.append(text);
+        if (transform != null) {
+          buffer.append(transform(element));
+        } else {
+          buffer.append(element == null ? "null" : element.toString());
+        }
       } else {
         break;
       }
@@ -15561,6 +16364,46 @@
     }
     buffer.append(postfix);
     return buffer;
+  }, joinTo_ww5rgk$:function($receiver, buffer, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_vo1v1y$($receiver, buffer, separator, prefix, postfix, limit, truncated, transform);
+  }, joinToString_oan0sg$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
+    if (separator === void 0) {
+      separator = ", ";
+    }
+    if (prefix === void 0) {
+      prefix = "";
+    }
+    if (postfix === void 0) {
+      postfix = "";
+    }
+    if (limit === void 0) {
+      limit = -1;
+    }
+    if (truncated === void 0) {
+      truncated = "...";
+    }
+    if (transform === void 0) {
+      transform = null;
+    }
+    return _.kotlin.joinTo_vo1v1y$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, joinToString_htaozy$:function($receiver, separator, prefix, postfix, limit, truncated, transform) {
     if (separator === void 0) {
       separator = ", ";
@@ -15580,7 +16423,7 @@
     if (transform === void 0) {
       transform = null;
     }
-    return _.kotlin.joinTo_ww5rgk$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
+    return _.kotlin.joinTo_vo1v1y$($receiver, new Kotlin.StringBuilder, separator, prefix, postfix, limit, truncated, transform).toString();
   }, asSequence_dzwiqr$:function($receiver) {
     return $receiver;
   }, average_73atux$:function($receiver) {
@@ -15755,13 +16598,19 @@
     result.addAll_4fm7v2$($receiver);
     _.kotlin.addAll_ltrmfx$(result, sequence);
     return result;
+  }, elementAt_kljjvw$:function($receiver, index) {
+    return $receiver.charAt(index);
   }, elementAt_n7iutu$:function($receiver, index) {
     return $receiver.charAt(index);
-  }, elementAtOrElse_svqa49$:Kotlin.defineInlineFunction("stdlib.kotlin.elementAtOrElse_svqa49$", function($receiver, index, defaultValue) {
-    return index >= 0 && index <= _.kotlin.get_lastIndex_pdl1w0$($receiver) ? $receiver.charAt(index) : defaultValue(index);
-  }), elementAtOrNull_n7iutu$:function($receiver, index) {
-    return index >= 0 && index <= _.kotlin.get_lastIndex_pdl1w0$($receiver) ? $receiver.charAt(index) : null;
-  }, find_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.find_ggikb8$", function($receiver, predicate) {
+  }, elementAtOrElse_a9lqqp$:Kotlin.defineInlineFunction("stdlib.kotlin.elementAtOrElse_a9lqqp$", function($receiver, index, defaultValue) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : defaultValue(index);
+  }), elementAtOrElse_svqa49$:Kotlin.defineInlineFunction("stdlib.kotlin.elementAtOrElse_svqa49$", function($receiver, index, defaultValue) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : defaultValue(index);
+  }), elementAtOrNull_kljjvw$:function($receiver, index) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : null;
+  }, elementAtOrNull_n7iutu$:function($receiver, index) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : null;
+  }, find_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.find_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -15771,23 +16620,49 @@
       }
     }
     return null;
-  }), findLast_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_ggikb8$", function($receiver, predicate) {
+  }), find_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.find_ggikb8$", function($receiver, predicate) {
     var tmp$0;
-    var last = null;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
       if (predicate(element)) {
-        last = element;
+        return element;
       }
     }
-    return last;
-  }), first_pdl1w0$:function($receiver) {
-    if (_.kotlin.isEmpty_pdl1w0$($receiver)) {
+    return null;
+  }), findLast_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_gwcya$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    return null;
+  }), findLast_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.findLast_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    return null;
+  }), first_gw00vq$:function($receiver) {
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       throw new Kotlin.NoSuchElementException("Collection is empty.");
     }
     return $receiver.charAt(0);
-  }, first_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.first_ggikb8$", function($receiver, predicate) {
+  }, first_pdl1w0$:function($receiver) {
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      throw new Kotlin.NoSuchElementException("Collection is empty.");
+    }
+    return $receiver.charAt(0);
+  }, first_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.first_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -15797,9 +16672,21 @@
       }
     }
     throw new Kotlin.NoSuchElementException("No element matching predicate was found.");
-  }), firstOrNull_pdl1w0$:function($receiver) {
-    return _.kotlin.isEmpty_pdl1w0$($receiver) ? null : $receiver.charAt(0);
-  }, firstOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.firstOrNull_ggikb8$", function($receiver, predicate) {
+  }), first_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.first_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    throw new Kotlin.NoSuchElementException("No element matching predicate was found.");
+  }), firstOrNull_gw00vq$:function($receiver) {
+    return _.kotlin.isEmpty_gw00vq$($receiver) ? null : $receiver.charAt(0);
+  }, firstOrNull_pdl1w0$:function($receiver) {
+    return _.kotlin.isEmpty_gw00vq$($receiver) ? null : $receiver.charAt(0);
+  }, firstOrNull_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.firstOrNull_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -15809,22 +16696,45 @@
       }
     }
     return null;
+  }), firstOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.firstOrNull_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    return null;
+  }), getOrElse_a9lqqp$:Kotlin.defineInlineFunction("stdlib.kotlin.getOrElse_a9lqqp$", function($receiver, index, defaultValue) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : defaultValue(index);
   }), getOrElse_svqa49$:Kotlin.defineInlineFunction("stdlib.kotlin.getOrElse_svqa49$", function($receiver, index, defaultValue) {
-    return index >= 0 && index <= _.kotlin.get_lastIndex_pdl1w0$($receiver) ? $receiver.charAt(index) : defaultValue(index);
-  }), getOrNull_n7iutu$:function($receiver, index) {
-    return index >= 0 && index <= _.kotlin.get_lastIndex_pdl1w0$($receiver) ? $receiver.charAt(index) : null;
-  }, indexOfFirst_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfFirst_ggikb8$", function($receiver, predicate) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : defaultValue(index);
+  }), getOrNull_kljjvw$:function($receiver, index) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : null;
+  }, getOrNull_n7iutu$:function($receiver, index) {
+    return index >= 0 && index <= _.kotlin.get_lastIndex_gw00vq$($receiver) ? $receiver.charAt(index) : null;
+  }, indexOfFirst_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfFirst_gwcya$", function($receiver, predicate) {
     var tmp$0, tmp$1, tmp$2, tmp$3;
-    tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
     for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
       if (predicate($receiver.charAt(index))) {
         return index;
       }
     }
     return-1;
-  }), indexOfLast_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_ggikb8$", function($receiver, predicate) {
+  }), indexOfFirst_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfFirst_ggikb8$", function($receiver, predicate) {
+    var tmp$0, tmp$1, tmp$2, tmp$3;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
+      if (predicate($receiver.charAt(index))) {
+        return index;
+      }
+    }
+    return-1;
+  }), indexOfLast_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_gwcya$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_pdl1w0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (predicate($receiver.charAt(index))) {
@@ -15832,41 +16742,75 @@
       }
     }
     return-1;
-  }), last_pdl1w0$:function($receiver) {
-    if (_.kotlin.isEmpty_pdl1w0$($receiver)) {
+  }), indexOfLast_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.indexOfLast_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      if (predicate($receiver.charAt(index))) {
+        return index;
+      }
+    }
+    return-1;
+  }), last_gw00vq$:function($receiver) {
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       throw new Kotlin.NoSuchElementException("Collection is empty.");
     }
-    return $receiver.charAt(_.kotlin.get_lastIndex_pdl1w0$($receiver));
-  }, last_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.last_ggikb8$", function($receiver, predicate) {
+    return $receiver.charAt(_.kotlin.get_lastIndex_gw00vq$($receiver));
+  }, last_pdl1w0$:function($receiver) {
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      throw new Kotlin.NoSuchElementException("Collection is empty.");
+    }
+    return $receiver.charAt(_.kotlin.get_lastIndex_gw00vq$($receiver));
+  }, last_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.last_gwcya$", function($receiver, predicate) {
     var tmp$0;
-    var last = null;
-    var found = false;
-    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
       if (predicate(element)) {
-        last = element;
-        found = true;
+        return element;
       }
     }
-    if (!found) {
-      throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
-    }
-    return last != null ? last : Kotlin.throwNPE();
-  }), lastOrNull_pdl1w0$:function($receiver) {
-    return _.kotlin.isEmpty_pdl1w0$($receiver) ? null : $receiver.charAt(_.kotlin.length_gw00vq$($receiver) - 1);
-  }, lastOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_ggikb8$", function($receiver, predicate) {
+    throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
+  }), last_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.last_ggikb8$", function($receiver, predicate) {
     var tmp$0;
-    var last = null;
-    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
       if (predicate(element)) {
-        last = element;
+        return element;
       }
     }
-    return last;
-  }), single_pdl1w0$:function($receiver) {
+    throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching the predicate.");
+  }), lastOrNull_gw00vq$:function($receiver) {
+    return _.kotlin.isEmpty_gw00vq$($receiver) ? null : $receiver.charAt(_.kotlin.length_gw00vq$($receiver) - 1);
+  }, lastOrNull_pdl1w0$:function($receiver) {
+    return _.kotlin.isEmpty_gw00vq$($receiver) ? null : $receiver.charAt(_.kotlin.length_gw00vq$($receiver) - 1);
+  }, lastOrNull_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_gwcya$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    return null;
+  }), lastOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.lastOrNull_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
+        return element;
+      }
+    }
+    return null;
+  }), single_gw00vq$:function($receiver) {
     var tmp$0, tmp$1;
     tmp$0 = _.kotlin.length_gw00vq$($receiver);
     if (tmp$0 === 0) {
@@ -15879,7 +16823,20 @@
       }
     }
     return tmp$1;
-  }, single_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.single_ggikb8$", function($receiver, predicate) {
+  }, single_pdl1w0$:function($receiver) {
+    var tmp$0, tmp$1;
+    tmp$0 = _.kotlin.length_gw00vq$($receiver);
+    if (tmp$0 === 0) {
+      throw new Kotlin.NoSuchElementException("Collection is empty.");
+    } else {
+      if (tmp$0 === 1) {
+        tmp$1 = $receiver.charAt(0);
+      } else {
+        throw new Kotlin.IllegalArgumentException("Collection has more than one element.");
+      }
+    }
+    return tmp$1;
+  }, single_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.single_gwcya$", function($receiver, predicate) {
     var tmp$0;
     var single = null;
     var found = false;
@@ -15898,9 +16855,30 @@
       throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching predicate.");
     }
     return single != null ? single : Kotlin.throwNPE();
-  }), singleOrNull_pdl1w0$:function($receiver) {
+  }), single_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.single_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    var single = null;
+    var found = false;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        if (found) {
+          throw new Kotlin.IllegalArgumentException("Collection contains more than one matching element.");
+        }
+        single = element;
+        found = true;
+      }
+    }
+    if (!found) {
+      throw new Kotlin.NoSuchElementException("Collection doesn't contain any element matching predicate.");
+    }
+    return single != null ? single : Kotlin.throwNPE();
+  }), singleOrNull_gw00vq$:function($receiver) {
     return _.kotlin.length_gw00vq$($receiver) === 1 ? $receiver.charAt(0) : null;
-  }, singleOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.singleOrNull_ggikb8$", function($receiver, predicate) {
+  }, singleOrNull_pdl1w0$:function($receiver) {
+    return _.kotlin.length_gw00vq$($receiver) === 1 ? $receiver.charAt(0) : null;
+  }, singleOrNull_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.singleOrNull_gwcya$", function($receiver, predicate) {
     var tmp$0;
     var single = null;
     var found = false;
@@ -15919,18 +16897,56 @@
       return null;
     }
     return single;
-  }), drop_n7iutu$:function($receiver, n) {
-    return $receiver.substring(Math.min(n, _.kotlin.length_gw00vq$($receiver)));
+  }), singleOrNull_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.singleOrNull_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    var single = null;
+    var found = false;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        if (found) {
+          return null;
+        }
+        single = element;
+        found = true;
+      }
+    }
+    if (!found) {
+      return null;
+    }
+    return single;
+  }), drop_kljjvw$:function($receiver, n) {
+    var value = n >= 0;
+    if (!value) {
+      var message = "Requested character count " + n + " is less than zero.";
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    return $receiver.substring(_.kotlin.coerceAtMost_rksjo2$(n, $receiver.length), $receiver.length);
+  }, drop_n7iutu$:function($receiver, n) {
+    var value = n >= 0;
+    if (!value) {
+      var message = "Requested character count " + n + " is less than zero.";
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    return $receiver.substring(_.kotlin.coerceAtMost_rksjo2$(n, $receiver.length));
+  }, dropLast_kljjvw$:function($receiver, n) {
+    var value = n >= 0;
+    if (!value) {
+      var message = "Requested character count " + n + " is less than zero.";
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    return _.kotlin.take_kljjvw$($receiver, _.kotlin.coerceAtLeast_rksjo2$($receiver.length - n, 0));
   }, dropLast_n7iutu$:function($receiver, n) {
     var value = n >= 0;
     if (!value) {
       var message = "Requested character count " + n + " is less than zero.";
       throw new Kotlin.IllegalArgumentException(message.toString());
     }
-    return _.kotlin.take_n7iutu$($receiver, _.kotlin.coerceAtLeast_rksjo2$(_.kotlin.length_gw00vq$($receiver) - n, 0));
-  }, dropLastWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.dropLastWhile_ggikb8$", function($receiver, predicate) {
+    return _.kotlin.take_n7iutu$($receiver, _.kotlin.coerceAtLeast_rksjo2$($receiver.length - n, 0));
+  }, dropLastWhile_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.dropLastWhile_gwcya$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_pdl1w0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (!predicate($receiver.charAt(index))) {
@@ -15938,15 +16954,45 @@
       }
     }
     return "";
+  }), dropLastWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.dropLastWhile_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      if (!predicate($receiver.charAt(index))) {
+        return $receiver.substring(0, index + 1);
+      }
+    }
+    return "";
+  }), dropWhile_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.dropWhile_gwcya$", function($receiver, predicate) {
+    var tmp$0, tmp$1, tmp$2, tmp$3;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
+      if (!predicate($receiver.charAt(index))) {
+        return $receiver.substring(index, $receiver.length);
+      }
+    }
+    return "";
   }), dropWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.dropWhile_ggikb8$", function($receiver, predicate) {
     var tmp$0, tmp$1, tmp$2, tmp$3;
-    tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
     for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
       if (!predicate($receiver.charAt(index))) {
         return $receiver.substring(index);
       }
     }
     return "";
+  }), filter_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.filter_gwcya$", function($receiver, predicate) {
+    var destination = new Kotlin.StringBuilder;
+    var tmp$0;
+    tmp$0 = _.kotlin.length_gw00vq$($receiver) - 1;
+    for (var index = 0;index <= tmp$0;index++) {
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
+        destination.append(element);
+      }
+    }
+    return destination;
   }), filter_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.filter_ggikb8$", function($receiver, predicate) {
     var destination = new Kotlin.StringBuilder;
     var tmp$0;
@@ -15958,6 +17004,55 @@
       }
     }
     return destination.toString();
+  }), filterIndexed_ig59fr$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_ig59fr$", function($receiver, predicate) {
+    var destination = new Kotlin.StringBuilder;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.append(item);
+      }
+    }
+    return destination;
+  }), filterIndexed_kq57hd$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexed_kq57hd$", function($receiver, predicate) {
+    var destination = new Kotlin.StringBuilder;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.append(item);
+      }
+    }
+    return destination.toString();
+  }), filterIndexedTo_ulxqbb$:Kotlin.defineInlineFunction("stdlib.kotlin.filterIndexedTo_ulxqbb$", function($receiver, destination, predicate) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      if (predicate(index_0, item)) {
+        destination.append(item);
+      }
+    }
+    return destination;
+  }), filterNot_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.filterNot_gwcya$", function($receiver, predicate) {
+    var destination = new Kotlin.StringBuilder;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (!predicate(element)) {
+        destination.append(element);
+      }
+    }
+    return destination;
   }), filterNot_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.filterNot_ggikb8$", function($receiver, predicate) {
     var destination = new Kotlin.StringBuilder;
     var tmp$0;
@@ -15969,12 +17064,32 @@
       }
     }
     return destination.toString();
+  }), filterNotTo_ppzoqm$:Kotlin.defineInlineFunction("stdlib.kotlin.filterNotTo_ppzoqm$", function($receiver, destination, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (!predicate(element)) {
+        destination.append(element);
+      }
+    }
+    return destination;
   }), filterNotTo_agvwt4$:Kotlin.defineInlineFunction("stdlib.kotlin.filterNotTo_agvwt4$", function($receiver, destination, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
       if (!predicate(element)) {
+        destination.append(element);
+      }
+    }
+    return destination;
+  }), filterTo_ppzoqm$:Kotlin.defineInlineFunction("stdlib.kotlin.filterTo_ppzoqm$", function($receiver, destination, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.length_gw00vq$($receiver) - 1;
+    for (var index = 0;index <= tmp$0;index++) {
+      var element = $receiver.charAt(index);
+      if (predicate(element)) {
         destination.append(element);
       }
     }
@@ -15989,11 +17104,29 @@
       }
     }
     return destination;
-  }), slice_cumll7$:function($receiver, indices) {
+  }), slice_xb7ld$:function($receiver, indices) {
+    if (indices.isEmpty()) {
+      return "";
+    }
+    return _.kotlin.subSequence_xb7ld$($receiver, indices);
+  }, slice_cumll7$:function($receiver, indices) {
     if (indices.isEmpty()) {
       return "";
     }
     return _.kotlin.substring_cumll7$($receiver, indices);
+  }, slice_wxqf4b$:function($receiver, indices) {
+    var tmp$0;
+    var size = _.kotlin.collectionSizeOrDefault_pjxt3m$(indices, 10);
+    if (size === 0) {
+      return "";
+    }
+    var result = new Kotlin.StringBuilder;
+    tmp$0 = indices.iterator();
+    while (tmp$0.hasNext()) {
+      var i = tmp$0.next();
+      result.append($receiver.charAt(i));
+    }
+    return result;
   }, slice_jf1m6n$:function($receiver, indices) {
     var tmp$0;
     var size = _.kotlin.collectionSizeOrDefault_pjxt3m$(indices, 10);
@@ -16007,24 +17140,49 @@
       result.append($receiver.charAt(i));
     }
     return result.toString();
+  }, take_kljjvw$:function($receiver, n) {
+    var value = n >= 0;
+    if (!value) {
+      var message = "Requested character count " + n + " is less than zero.";
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    return $receiver.substring(0, _.kotlin.coerceAtMost_rksjo2$(n, $receiver.length));
   }, take_n7iutu$:function($receiver, n) {
     var value = n >= 0;
     if (!value) {
       var message = "Requested character count " + n + " is less than zero.";
       throw new Kotlin.IllegalArgumentException(message.toString());
     }
-    return $receiver.substring(0, Math.min(n, _.kotlin.length_gw00vq$($receiver)));
+    return $receiver.substring(0, _.kotlin.coerceAtMost_rksjo2$(n, $receiver.length));
+  }, takeLast_kljjvw$:function($receiver, n) {
+    var value = n >= 0;
+    if (!value) {
+      var message = "Requested character count " + n + " is less than zero.";
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    var length = $receiver.length;
+    return $receiver.substring(length - _.kotlin.coerceAtMost_rksjo2$(n, length), length);
   }, takeLast_n7iutu$:function($receiver, n) {
     var value = n >= 0;
     if (!value) {
       var message = "Requested character count " + n + " is less than zero.";
       throw new Kotlin.IllegalArgumentException(message.toString());
     }
-    var length = _.kotlin.length_gw00vq$($receiver);
-    return $receiver.substring(length - Math.min(n, length), length);
-  }, takeLastWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.takeLastWhile_ggikb8$", function($receiver, predicate) {
+    var length = $receiver.length;
+    return $receiver.substring(length - _.kotlin.coerceAtMost_rksjo2$(n, length));
+  }, takeLastWhile_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.takeLastWhile_gwcya$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.downTo_rksjo2$(_.kotlin.get_lastIndex_pdl1w0$($receiver), 0).iterator();
+    tmp$0 = _.kotlin.downTo_rksjo2$(_.kotlin.get_lastIndex_gw00vq$($receiver), 0).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      if (!predicate($receiver.charAt(index))) {
+        return $receiver.substring(index + 1, $receiver.length);
+      }
+    }
+    return $receiver.substring(0, $receiver.length);
+  }), takeLastWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.takeLastWhile_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.downTo_rksjo2$(_.kotlin.get_lastIndex_gw00vq$($receiver), 0).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       if (!predicate($receiver.charAt(index))) {
@@ -16032,19 +17190,40 @@
       }
     }
     return $receiver;
+  }), takeWhile_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.takeWhile_gwcya$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = $receiver.length - 1;
+    for (var index = 0;index <= tmp$0;index++) {
+      if (!predicate($receiver.charAt(index))) {
+        return $receiver.substring(0, index);
+      }
+    }
+    return $receiver.substring(0, $receiver.length);
   }), takeWhile_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.takeWhile_ggikb8$", function($receiver, predicate) {
     var tmp$0;
-    tmp$0 = _.kotlin.length_gw00vq$($receiver) - 1;
+    tmp$0 = $receiver.length - 1;
     for (var index = 0;index <= tmp$0;index++) {
       if (!predicate($receiver.charAt(index))) {
         return $receiver.substring(0, index);
       }
     }
     return $receiver;
-  }), reversed_pdl1w0$:function($receiver) {
-    return(new Kotlin.StringBuilder).append($receiver).reverse().toString();
+  }), reversed_gw00vq$:function($receiver) {
+    return(new Kotlin.StringBuilder($receiver.toString())).reverse();
+  }, reversed_pdl1w0$:function($receiver) {
+    return(new Kotlin.StringBuilder($receiver)).reverse().toString();
+  }, toArrayList_gw00vq$:function($receiver) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver)));
   }, toArrayList_pdl1w0$:function($receiver) {
-    return _.kotlin.toCollection_t4l68$($receiver, new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver)));
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver)));
+  }, toCollection_7ev2fq$:function($receiver, collection) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      collection.add_za3rmp$(item);
+    }
+    return collection;
   }, toCollection_t4l68$:function($receiver, collection) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
@@ -16053,13 +17232,17 @@
       collection.add_za3rmp$(item);
     }
     return collection;
+  }, toHashSet_gw00vq$:function($receiver) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.PrimitiveNumberHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
   }, toHashSet_pdl1w0$:function($receiver) {
-    return _.kotlin.toCollection_t4l68$($receiver, new Kotlin.PrimitiveNumberHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.PrimitiveNumberHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
   }, toLinkedList_pdl1w0$:function($receiver) {
-    return _.kotlin.toCollection_t4l68$($receiver, new Kotlin.LinkedList);
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.LinkedList);
+  }, toList_gw00vq$:function($receiver) {
+    return _.kotlin.toArrayList_gw00vq$($receiver);
   }, toList_pdl1w0$:function($receiver) {
-    return _.kotlin.toArrayList_pdl1w0$($receiver);
-  }, toMap_i7at94$:Kotlin.defineInlineFunction("stdlib.kotlin.toMap_i7at94$", function($receiver, selector) {
+    return _.kotlin.toArrayList_gw00vq$($receiver);
+  }, toMap_g3n5bm$:Kotlin.defineInlineFunction("stdlib.kotlin.toMap_g3n5bm$", function($receiver, selector) {
     var tmp$0;
     var capacity = _.kotlin.length_gw00vq$($receiver) / 0.75 + 1;
     var result = new Kotlin.LinkedHashMap(Math.max(capacity | 0, 16));
@@ -16067,6 +17250,26 @@
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
       result.put_wn2jw4$(selector(element), element);
+    }
+    return result;
+  }), toMap_i7at94$:Kotlin.defineInlineFunction("stdlib.kotlin.toMap_i7at94$", function($receiver, selector) {
+    var tmp$0;
+    var capacity = _.kotlin.length_gw00vq$($receiver) / 0.75 + 1;
+    var result = new Kotlin.LinkedHashMap(Math.max(capacity | 0, 16));
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      result.put_wn2jw4$(selector(element), element);
+    }
+    return result;
+  }), toMap_27fiyi$:Kotlin.defineInlineFunction("stdlib.kotlin.toMap_27fiyi$", function($receiver, selector, transform) {
+    var tmp$0;
+    var capacity = _.kotlin.length_gw00vq$($receiver) / 0.75 + 1;
+    var result = new Kotlin.LinkedHashMap(Math.max(capacity | 0, 16));
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      result.put_wn2jw4$(selector(element), transform(element));
     }
     return result;
   }), toMap_tp7yok$:Kotlin.defineInlineFunction("stdlib.kotlin.toMap_tp7yok$", function($receiver, selector, transform) {
@@ -16079,6 +17282,16 @@
       result.put_wn2jw4$(selector(element), transform(element));
     }
     return result;
+  }), toMapBy_g3n5bm$:Kotlin.defineInlineFunction("stdlib.kotlin.toMapBy_g3n5bm$", function($receiver, selector) {
+    var tmp$0;
+    var capacity = _.kotlin.length_gw00vq$($receiver) / 0.75 + 1;
+    var result = new Kotlin.LinkedHashMap(Math.max(capacity | 0, 16));
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      result.put_wn2jw4$(selector(element), element);
+    }
+    return result;
   }), toMapBy_i7at94$:Kotlin.defineInlineFunction("stdlib.kotlin.toMapBy_i7at94$", function($receiver, selector) {
     var tmp$0;
     var capacity = _.kotlin.length_gw00vq$($receiver) / 0.75 + 1;
@@ -16089,12 +17302,35 @@
       result.put_wn2jw4$(selector(element), element);
     }
     return result;
-  }), toSet_pdl1w0$:function($receiver) {
-    return _.kotlin.toCollection_t4l68$($receiver, new Kotlin.LinkedHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
+  }), toSet_gw00vq$:function($receiver) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.LinkedHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
+  }, toSet_pdl1w0$:function($receiver) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.LinkedHashSet(_.kotlin.mapCapacity(_.kotlin.length_gw00vq$($receiver))));
+  }, toSortedSet_gw00vq$:function($receiver) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.TreeSet);
   }, toSortedSet_pdl1w0$:function($receiver) {
-    return _.kotlin.toCollection_t4l68$($receiver, new Kotlin.TreeSet);
-  }, flatMap_91edvu$:Kotlin.defineInlineFunction("stdlib.kotlin.flatMap_91edvu$", function($receiver, transform) {
+    return _.kotlin.toCollection_7ev2fq$($receiver, new Kotlin.TreeSet);
+  }, flatMap_iinvgw$:Kotlin.defineInlineFunction("stdlib.kotlin.flatMap_iinvgw$", function($receiver, transform) {
     var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var list = transform(element);
+      _.kotlin.addAll_p6ac9a$(destination, list);
+    }
+    return destination;
+  }), flatMap_91edvu$:Kotlin.defineInlineFunction("stdlib.kotlin.flatMap_91edvu$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var list = transform(element);
+      _.kotlin.addAll_p6ac9a$(destination, list);
+    }
+    return destination;
+  }), flatMapTo_ks55ou$:Kotlin.defineInlineFunction("stdlib.kotlin.flatMapTo_ks55ou$", function($receiver, destination, transform) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16112,8 +17348,53 @@
       _.kotlin.addAll_p6ac9a$(destination, list);
     }
     return destination;
+  }), groupBy_g3n5bm$:Kotlin.defineInlineFunction("stdlib.kotlin.groupBy_g3n5bm$", function($receiver, toKey) {
+    var map = new Kotlin.LinkedHashMap;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var key = toKey(element);
+      var list;
+      getOrPut_x00lr4$break: {
+        var value = map.get_za3rmp$(key);
+        if (value == null && !map.containsKey_za3rmp$(key)) {
+          var answer = new Kotlin.ArrayList;
+          map.put_wn2jw4$(key, answer);
+          list = answer;
+          break getOrPut_x00lr4$break;
+        } else {
+          list = value;
+          break getOrPut_x00lr4$break;
+        }
+      }
+      list.add_za3rmp$(element);
+    }
+    return map;
   }), groupBy_i7at94$:Kotlin.defineInlineFunction("stdlib.kotlin.groupBy_i7at94$", function($receiver, toKey) {
     var map = new Kotlin.LinkedHashMap;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var key = toKey(element);
+      var list;
+      getOrPut_x00lr4$break: {
+        var value = map.get_za3rmp$(key);
+        if (value == null && !map.containsKey_za3rmp$(key)) {
+          var answer = new Kotlin.ArrayList;
+          map.put_wn2jw4$(key, answer);
+          list = answer;
+          break getOrPut_x00lr4$break;
+        } else {
+          list = value;
+          break getOrPut_x00lr4$break;
+        }
+      }
+      list.add_za3rmp$(element);
+    }
+    return map;
+  }), groupByTo_iccvsz$:Kotlin.defineInlineFunction("stdlib.kotlin.groupByTo_iccvsz$", function($receiver, map, toKey) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16157,6 +17438,15 @@
       list.add_za3rmp$(element);
     }
     return map;
+  }), map_g3n5bm$:Kotlin.defineInlineFunction("stdlib.kotlin.map_g3n5bm$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver));
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(transform(item));
+    }
+    return destination;
   }), map_i7at94$:Kotlin.defineInlineFunction("stdlib.kotlin.map_i7at94$", function($receiver, transform) {
     var destination = new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver));
     var tmp$0;
@@ -16166,8 +17456,54 @@
       destination.add_za3rmp$(transform(item));
     }
     return destination;
+  }), mapIndexed_psxq2r$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexed_psxq2r$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver));
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(transform(index++, item));
+    }
+    return destination;
   }), mapIndexed_jqhx0d$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexed_jqhx0d$", function($receiver, transform) {
     var destination = new Kotlin.ArrayList(_.kotlin.length_gw00vq$($receiver));
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(transform(index++, item));
+    }
+    return destination;
+  }), mapIndexedNotNull_psxq2r$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNull_psxq2r$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      var tmp$1;
+      (tmp$1 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_6(destination)) : null;
+    }
+    return destination;
+  }), f_6:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapIndexedNotNullTo_3ul4zf$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedNotNullTo_3ul4zf$", function($receiver, destination, transform) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      var index_0 = index++;
+      var tmp$1;
+      (tmp$1 = transform(index_0, item)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_6(destination)) : null;
+    }
+    return destination;
+  }), mapIndexedTo_3ul4zf$:Kotlin.defineInlineFunction("stdlib.kotlin.mapIndexedTo_3ul4zf$", function($receiver, destination, transform) {
     var tmp$0;
     var index = 0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
@@ -16185,6 +17521,37 @@
       destination.add_za3rmp$(transform(index++, item));
     }
     return destination;
+  }), mapNotNull_g3n5bm$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNull_g3n5bm$", function($receiver, transform) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_7(destination)) : null;
+    }
+    return destination;
+  }), f_7:function(destination) {
+    return function(it) {
+      return destination.add_za3rmp$(it);
+    };
+  }, mapNotNullTo_k208eo$:Kotlin.defineInlineFunction("stdlib.kotlin.mapNotNullTo_k208eo$", function($receiver, destination, transform) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      var tmp$1;
+      (tmp$1 = transform(element)) != null ? _.kotlin.let_7hr6ff$(tmp$1, _.kotlin.f_7(destination)) : null;
+    }
+    return destination;
+  }), mapTo_k208eo$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_k208eo$", function($receiver, destination, transform) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(transform(item));
+    }
+    return destination;
   }), mapTo_svkxu2$:Kotlin.defineInlineFunction("stdlib.kotlin.mapTo_svkxu2$", function($receiver, destination, transform) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
@@ -16193,13 +17560,19 @@
       destination.add_za3rmp$(transform(item));
     }
     return destination;
-  }), withIndex_pdl1w0$f:function(this$withIndex) {
+  }), withIndex_gw00vq$f:function(this$withIndex) {
+    return function() {
+      return _.kotlin.iterator_gw00vq$(this$withIndex);
+    };
+  }, withIndex_gw00vq$:function($receiver) {
+    return new _.kotlin.IndexingIterable(_.kotlin.withIndex_gw00vq$f($receiver));
+  }, withIndex_pdl1w0$f:function(this$withIndex) {
     return function() {
       return _.kotlin.iterator_gw00vq$(this$withIndex);
     };
   }, withIndex_pdl1w0$:function($receiver) {
     return new _.kotlin.IndexingIterable(_.kotlin.withIndex_pdl1w0$f($receiver));
-  }, all_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.all_ggikb8$", function($receiver, predicate) {
+  }, all_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.all_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16209,7 +17582,17 @@
       }
     }
     return true;
-  }), any_pdl1w0$:function($receiver) {
+  }), all_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.all_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (!predicate(element)) {
+        return false;
+      }
+    }
+    return true;
+  }), any_gw00vq$:function($receiver) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16217,7 +17600,15 @@
       return true;
     }
     return false;
-  }, any_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.any_ggikb8$", function($receiver, predicate) {
+  }, any_pdl1w0$:function($receiver) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      return true;
+    }
+    return false;
+  }, any_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.any_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16227,9 +17618,21 @@
       }
     }
     return false;
-  }), count_pdl1w0$:function($receiver) {
+  }), any_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.any_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        return true;
+      }
+    }
+    return false;
+  }), count_gw00vq$:function($receiver) {
     return _.kotlin.length_gw00vq$($receiver);
-  }, count_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.count_ggikb8$", function($receiver, predicate) {
+  }, count_pdl1w0$:function($receiver) {
+    return _.kotlin.length_gw00vq$($receiver);
+  }, count_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.count_gwcya$", function($receiver, predicate) {
     var tmp$0;
     var count = 0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
@@ -16240,6 +17643,26 @@
       }
     }
     return count;
+  }), count_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.count_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    var count = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        count++;
+      }
+    }
+    return count;
+  }), fold_u4nbyf$:Kotlin.defineInlineFunction("stdlib.kotlin.fold_u4nbyf$", function($receiver, initial, operation) {
+    var tmp$0;
+    var accumulator = initial;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      accumulator = operation(accumulator, element);
+    }
+    return accumulator;
   }), fold_a4ypeb$:Kotlin.defineInlineFunction("stdlib.kotlin.fold_a4ypeb$", function($receiver, initial, operation) {
     var tmp$0;
     var accumulator = initial;
@@ -16249,19 +17672,41 @@
       accumulator = operation(accumulator, element);
     }
     return accumulator;
-  }), foldRight_h0c67b$:Kotlin.defineInlineFunction("stdlib.kotlin.foldRight_h0c67b$", function($receiver, initial, operation) {
-    var index = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+  }), foldRight_dr5uf3$:Kotlin.defineInlineFunction("stdlib.kotlin.foldRight_dr5uf3$", function($receiver, initial, operation) {
+    var index = _.kotlin.get_lastIndex_gw00vq$($receiver);
     var accumulator = initial;
     while (index >= 0) {
       accumulator = operation($receiver.charAt(index--), accumulator);
     }
     return accumulator;
+  }), foldRight_h0c67b$:Kotlin.defineInlineFunction("stdlib.kotlin.foldRight_h0c67b$", function($receiver, initial, operation) {
+    var index = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    var accumulator = initial;
+    while (index >= 0) {
+      accumulator = operation($receiver.charAt(index--), accumulator);
+    }
+    return accumulator;
+  }), forEach_1m5ltu$:Kotlin.defineInlineFunction("stdlib.kotlin.forEach_1m5ltu$", function($receiver, operation) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      operation(element);
+    }
   }), forEach_49kuas$:Kotlin.defineInlineFunction("stdlib.kotlin.forEach_49kuas$", function($receiver, operation) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
       var element = tmp$0.next();
       operation(element);
+    }
+  }), forEachIndexed_ivsfzd$:Kotlin.defineInlineFunction("stdlib.kotlin.forEachIndexed_ivsfzd$", function($receiver, operation) {
+    var tmp$0;
+    var index = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      operation(index++, item);
     }
   }), forEachIndexed_r5lh4h$:Kotlin.defineInlineFunction("stdlib.kotlin.forEachIndexed_r5lh4h$", function($receiver, operation) {
     var tmp$0;
@@ -16271,28 +17716,44 @@
       var item = tmp$0.next();
       operation(index++, item);
     }
-  }), max_pdl1w0$:function($receiver) {
-    var iterator = _.kotlin.iterator_gw00vq$($receiver);
-    if (!iterator.hasNext()) {
+  }), max_gw00vq$:function($receiver) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       return null;
     }
-    var max = iterator.next();
-    while (iterator.hasNext()) {
-      var e = iterator.next();
+    var max = $receiver.charAt(0);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
       if (max < e) {
         max = e;
       }
     }
     return max;
-  }, maxBy_qnlmby$:Kotlin.defineInlineFunction("stdlib.kotlin.maxBy_qnlmby$", function($receiver, f) {
-    var iterator = _.kotlin.iterator_gw00vq$($receiver);
-    if (!iterator.hasNext()) {
+  }, max_pdl1w0$:function($receiver) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       return null;
     }
-    var maxElem = iterator.next();
+    var max = $receiver.charAt(0);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
+      if (max < e) {
+        max = e;
+      }
+    }
+    return max;
+  }, maxBy_eowu5k$:Kotlin.defineInlineFunction("stdlib.kotlin.maxBy_eowu5k$", function($receiver, f) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      return null;
+    }
+    var maxElem = $receiver.charAt(0);
     var maxValue = f(maxElem);
-    while (iterator.hasNext()) {
-      var e = iterator.next();
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
       var v = f(e);
       if (Kotlin.compareTo(maxValue, v) < 0) {
         maxElem = e;
@@ -16300,28 +17761,61 @@
       }
     }
     return maxElem;
-  }), min_pdl1w0$:function($receiver) {
-    var iterator = _.kotlin.iterator_gw00vq$($receiver);
-    if (!iterator.hasNext()) {
+  }), maxBy_qnlmby$:Kotlin.defineInlineFunction("stdlib.kotlin.maxBy_qnlmby$", function($receiver, f) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       return null;
     }
-    var min = iterator.next();
-    while (iterator.hasNext()) {
-      var e = iterator.next();
+    var maxElem = $receiver.charAt(0);
+    var maxValue = f(maxElem);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
+      var v = f(e);
+      if (Kotlin.compareTo(maxValue, v) < 0) {
+        maxElem = e;
+        maxValue = v;
+      }
+    }
+    return maxElem;
+  }), min_gw00vq$:function($receiver) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      return null;
+    }
+    var min = $receiver.charAt(0);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
       if (min > e) {
         min = e;
       }
     }
     return min;
-  }, minBy_qnlmby$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_qnlmby$", function($receiver, f) {
-    var iterator = _.kotlin.iterator_gw00vq$($receiver);
-    if (!iterator.hasNext()) {
+  }, min_pdl1w0$:function($receiver) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
       return null;
     }
-    var minElem = iterator.next();
+    var min = $receiver.charAt(0);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
+      if (min > e) {
+        min = e;
+      }
+    }
+    return min;
+  }, minBy_eowu5k$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_eowu5k$", function($receiver, f) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      return null;
+    }
+    var minElem = $receiver.charAt(0);
     var minValue = f(minElem);
-    while (iterator.hasNext()) {
-      var e = iterator.next();
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
       var v = f(e);
       if (Kotlin.compareTo(minValue, v) > 0) {
         minElem = e;
@@ -16329,7 +17823,24 @@
       }
     }
     return minElem;
-  }), none_pdl1w0$:function($receiver) {
+  }), minBy_qnlmby$:Kotlin.defineInlineFunction("stdlib.kotlin.minBy_qnlmby$", function($receiver, f) {
+    var tmp$0;
+    if (_.kotlin.isEmpty_gw00vq$($receiver)) {
+      return null;
+    }
+    var minElem = $receiver.charAt(0);
+    var minValue = f(minElem);
+    tmp$0 = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    for (var i = 1;i <= tmp$0;i++) {
+      var e = $receiver.charAt(i);
+      var v = f(e);
+      if (Kotlin.compareTo(minValue, v) > 0) {
+        minElem = e;
+        minValue = v;
+      }
+    }
+    return minElem;
+  }), none_gw00vq$:function($receiver) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16337,7 +17848,15 @@
       return false;
     }
     return true;
-  }, none_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.none_ggikb8$", function($receiver, predicate) {
+  }, none_pdl1w0$:function($receiver) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      return false;
+    }
+    return true;
+  }, none_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.none_gwcya$", function($receiver, predicate) {
     var tmp$0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
     while (tmp$0.hasNext()) {
@@ -16347,6 +17866,26 @@
       }
     }
     return true;
+  }), none_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.none_ggikb8$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        return false;
+      }
+    }
+    return true;
+  }), reduce_jbdc00$:Kotlin.defineInlineFunction("stdlib.kotlin.reduce_jbdc00$", function($receiver, operation) {
+    var iterator = _.kotlin.iterator_gw00vq$($receiver);
+    if (!iterator.hasNext()) {
+      throw new Kotlin.UnsupportedOperationException("Empty iterable can't be reduced.");
+    }
+    var accumulator = iterator.next();
+    while (iterator.hasNext()) {
+      accumulator = operation(accumulator, iterator.next());
+    }
+    return accumulator;
   }), reduce_pw3qsm$:Kotlin.defineInlineFunction("stdlib.kotlin.reduce_pw3qsm$", function($receiver, operation) {
     var iterator = _.kotlin.iterator_gw00vq$($receiver);
     if (!iterator.hasNext()) {
@@ -16357,8 +17896,8 @@
       accumulator = operation(accumulator, iterator.next());
     }
     return accumulator;
-  }), reduceRight_pw3qsm$:Kotlin.defineInlineFunction("stdlib.kotlin.reduceRight_pw3qsm$", function($receiver, operation) {
-    var index = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+  }), reduceRight_jbdc00$:Kotlin.defineInlineFunction("stdlib.kotlin.reduceRight_jbdc00$", function($receiver, operation) {
+    var index = _.kotlin.get_lastIndex_gw00vq$($receiver);
     if (index < 0) {
       throw new Kotlin.UnsupportedOperationException("Empty iterable can't be reduced.");
     }
@@ -16367,7 +17906,35 @@
       accumulator = operation($receiver.charAt(index--), accumulator);
     }
     return accumulator;
+  }), reduceRight_pw3qsm$:Kotlin.defineInlineFunction("stdlib.kotlin.reduceRight_pw3qsm$", function($receiver, operation) {
+    var index = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    if (index < 0) {
+      throw new Kotlin.UnsupportedOperationException("Empty iterable can't be reduced.");
+    }
+    var accumulator = $receiver.charAt(index--);
+    while (index >= 0) {
+      accumulator = operation($receiver.charAt(index--), accumulator);
+    }
+    return accumulator;
+  }), sumBy_g3i1jp$:Kotlin.defineInlineFunction("stdlib.kotlin.sumBy_g3i1jp$", function($receiver, transform) {
+    var tmp$0;
+    var sum = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      sum += transform(element);
+    }
+    return sum;
   }), sumBy_i75ph7$:Kotlin.defineInlineFunction("stdlib.kotlin.sumBy_i75ph7$", function($receiver, transform) {
+    var tmp$0;
+    var sum = 0;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      sum += transform(element);
+    }
+    return sum;
+  }), sumByDouble_pj8hgv$:Kotlin.defineInlineFunction("stdlib.kotlin.sumByDouble_pj8hgv$", function($receiver, transform) {
     var tmp$0;
     var sum = 0;
     tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
@@ -16385,6 +17952,20 @@
       sum += transform(element);
     }
     return sum;
+  }), partition_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.partition_gwcya$", function($receiver, predicate) {
+    var tmp$0;
+    var first = new Kotlin.StringBuilder;
+    var second = new Kotlin.StringBuilder;
+    tmp$0 = _.kotlin.iterator_gw00vq$($receiver);
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (predicate(element)) {
+        first.append(element);
+      } else {
+        second.append(element);
+      }
+    }
+    return new _.kotlin.Pair(first, second);
   }), partition_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.partition_ggikb8$", function($receiver, predicate) {
     var tmp$0;
     var first = new Kotlin.StringBuilder;
@@ -16399,7 +17980,7 @@
       }
     }
     return new _.kotlin.Pair(first.toString(), second.toString());
-  }), zip_94jgcu$:function($receiver, other) {
+  }), zip_gcuzck$:function($receiver, other) {
     var tmp$0;
     var length = Math.min(_.kotlin.length_gw00vq$($receiver), _.kotlin.length_gw00vq$(other));
     var list = new Kotlin.ArrayList(length);
@@ -16410,7 +17991,18 @@
       list.add_za3rmp$(_.kotlin.to_l1ob02$(c1, c2));
     }
     return list;
-  }, zip_b9jaz2$:Kotlin.defineInlineFunction("stdlib.kotlin.zip_b9jaz2$", function($receiver, other, transform) {
+  }, zip_94jgcu$:function($receiver, other) {
+    var tmp$0;
+    var length = Math.min(_.kotlin.length_gw00vq$($receiver), _.kotlin.length_gw00vq$(other));
+    var list = new Kotlin.ArrayList(length);
+    tmp$0 = length - 1;
+    for (var i = 0;i <= tmp$0;i++) {
+      var c1 = $receiver.charAt(i);
+      var c2 = other.charAt(i);
+      list.add_za3rmp$(_.kotlin.to_l1ob02$(c1, c2));
+    }
+    return list;
+  }, zip_ef1zdk$:Kotlin.defineInlineFunction("stdlib.kotlin.zip_ef1zdk$", function($receiver, other, transform) {
     var tmp$0;
     var length = Math.min(_.kotlin.length_gw00vq$($receiver), _.kotlin.length_gw00vq$(other));
     var list = new Kotlin.ArrayList(length);
@@ -16419,8 +18011,26 @@
       list.add_za3rmp$(transform($receiver.charAt(i), other.charAt(i)));
     }
     return list;
-  }), asSequence_pdl1w0$:function($receiver) {
-    if (_.kotlin.isEmpty_pdl1w0$($receiver)) {
+  }), zip_b9jaz2$:Kotlin.defineInlineFunction("stdlib.kotlin.zip_b9jaz2$", function($receiver, other, transform) {
+    var tmp$0;
+    var length = Math.min(_.kotlin.length_gw00vq$($receiver), _.kotlin.length_gw00vq$(other));
+    var list = new Kotlin.ArrayList(length);
+    tmp$0 = length - 1;
+    for (var i = 0;i <= tmp$0;i++) {
+      list.add_za3rmp$(transform($receiver.charAt(i), other.charAt(i)));
+    }
+    return list;
+  }), asSequence_gw00vq$:function($receiver) {
+    if (typeof $receiver === "string" && _.kotlin.isEmpty_gw00vq$($receiver)) {
+      return _.kotlin.emptySequence();
+    }
+    return Kotlin.createObject(function() {
+      return[_.kotlin.Sequence];
+    }, null, {iterator:function() {
+      return _.kotlin.iterator_gw00vq$($receiver);
+    }});
+  }, asSequence_pdl1w0$:function($receiver) {
+    if (typeof $receiver === "string" && _.kotlin.isEmpty_gw00vq$($receiver)) {
       return _.kotlin.emptySequence();
     }
     return Kotlin.createObject(function() {
@@ -17257,6 +18867,14 @@
     } else {
       $receiver.clear();
     }
+  }, sort_lglzam$:function($receiver) {
+    if ($receiver.size > 1) {
+      _.java.util.Collections.sort_efuixw$($receiver);
+    }
+  }, sortWith_befwer$:function($receiver, comparator) {
+    if ($receiver.size > 1) {
+      _.java.util.Collections.sort_a7cel1$($receiver, comparator);
+    }
   }, ReversedListReadOnly:Kotlin.createClass(function() {
     return[Kotlin.AbstractList];
   }, function $fun(delegate) {
@@ -17271,7 +18889,7 @@
     return this.delegate.get_za3lpa$(this.flipIndex_s8ev3o$(index));
   }, flipIndex_s8ev3o$:function($receiver) {
     var $receiver_0 = this;
-    if ((new Kotlin.NumberRange(0, $receiver_0.size - 1)).contains($receiver)) {
+    if ((new Kotlin.NumberRange(0, $receiver_0.size - 1)).contains_htax2k$($receiver)) {
       var $receiver_1 = this;
       return $receiver_1.size - $receiver - 1;
     } else {
@@ -17280,7 +18898,7 @@
     }
   }, flipIndexForward_s8ev3o$:function($receiver) {
     var $receiver_0 = this;
-    if ((new Kotlin.NumberRange(0, $receiver_0.size)).contains($receiver)) {
+    if ((new Kotlin.NumberRange(0, $receiver_0.size)).contains_htax2k$($receiver)) {
       var $receiver_1 = this;
       return $receiver_1.size - $receiver;
     } else {
@@ -17798,11 +19416,11 @@
     }
     return false;
   }, isHighSurrogate_myv2d1$:function($receiver) {
-    return(new Kotlin.CharRange(_.kotlin.get_MIN_HIGH_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_HIGH_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains($receiver);
+    return(new Kotlin.CharRange(_.kotlin.get_MIN_HIGH_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_HIGH_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains_htax2k$($receiver);
   }, isLowSurrogate_myv2d1$:function($receiver) {
-    return(new Kotlin.CharRange(_.kotlin.get_MIN_LOW_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_LOW_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains($receiver);
+    return(new Kotlin.CharRange(_.kotlin.get_MIN_LOW_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_LOW_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains_htax2k$($receiver);
   }, isSurrogate_myv2d1$:function($receiver) {
-    return(new Kotlin.CharRange(_.kotlin.get_MIN_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains($receiver);
+    return(new Kotlin.CharRange(_.kotlin.get_MIN_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject), _.kotlin.get_MAX_SURROGATE_n24eod$(Kotlin.modules["stdlib"].kotlin.js.internal.CharCompanionObject))).contains_htax2k$($receiver);
   }, get_MIN_HIGH_SURROGATE_n24eod$:{value:function($receiver) {
     return "\ud800";
   }}, get_MAX_HIGH_SURROGATE_n24eod$:{value:function($receiver) {
@@ -17827,12 +19445,12 @@
     if (marginPrefix === void 0) {
       marginPrefix = "|";
     }
-    var value = _.kotlin.isNotBlank_pdl1w0$(marginPrefix);
+    var value = _.kotlin.isNotBlank_gw00vq$(marginPrefix);
     if (!value) {
       var message = "marginPrefix should be non blank string but it is '" + marginPrefix + "'";
       throw new Kotlin.IllegalArgumentException(message.toString());
     }
-    var lines = _.kotlin.lines_pdl1w0$($receiver);
+    var lines = _.kotlin.lines_gw00vq$($receiver);
     var resultSizeEstimate = _.kotlin.length_gw00vq$($receiver) + _.kotlin.length_gw00vq$(newIndent) * lines.size;
     var indentAddFunction = _.kotlin.getIndentFunction(newIndent);
     var lastIndex = _.kotlin.get_lastIndex_fvq2g0$(lines);
@@ -17845,20 +19463,20 @@
       var index_0 = index++;
       var tmp$2, tmp$1;
       var tmp$3;
-      if ((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_pdl1w0$(item)) {
+      if ((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_gw00vq$(item)) {
         tmp$3 = null;
       } else {
         var replaceIndentByMargin_ex0kps$f_0$result;
         replaceIndentByMargin_ex0kps$f_0$break: {
           var firstNonWhitespaceIndex;
-          indexOfFirst_ggikb8$break: {
+          indexOfFirst_gwcya$break: {
             var tmp$7, tmp$4, tmp$5, tmp$6;
-            tmp$7 = _.kotlin.get_indices_pdl1w0$(item), tmp$4 = tmp$7.start, tmp$5 = tmp$7.end, tmp$6 = tmp$7.increment;
+            tmp$7 = _.kotlin.get_indices_gw00vq$(item), tmp$4 = tmp$7.start, tmp$5 = tmp$7.end, tmp$6 = tmp$7.increment;
             for (var index_1 = tmp$4;index_1 <= tmp$5;index_1 += tmp$6) {
               var it = item.charAt(index_1);
               if (!_.kotlin.isWhitespace_myv2d1$(it)) {
                 firstNonWhitespaceIndex = index_1;
-                break indexOfFirst_ggikb8$break;
+                break indexOfFirst_gwcya$break;
               }
             }
             firstNonWhitespaceIndex = -1;
@@ -17876,11 +19494,11 @@
             }
           }
         }
-        tmp$3 = (tmp$1 = (tmp$2 = replaceIndentByMargin_ex0kps$f_0$result) != null ? _.kotlin.let_7hr6ff$(tmp$2, _.kotlin.f_1(indentAddFunction)) : null) != null ? tmp$1 : item;
+        tmp$3 = (tmp$1 = (tmp$2 = replaceIndentByMargin_ex0kps$f_0$result) != null ? _.kotlin.let_7hr6ff$(tmp$2, _.kotlin.f_9(indentAddFunction)) : null) != null ? tmp$1 : item;
       }
       destination.add_za3rmp$(tmp$3);
     }
-    return _.kotlin.joinTo_3o8ep9$(_.kotlin.filterNotNull_ir3nkc$(destination), new Kotlin.StringBuilder, "\n").toString();
+    return _.kotlin.joinTo_pzhnk5$(_.kotlin.filterNotNull_ir3nkc$(destination), new Kotlin.StringBuilder, "\n").toString();
   }, trimIndent_pdl1w0$:function($receiver) {
     return _.kotlin.replaceIndent_94jgcu$($receiver, "");
   }, replaceIndent_94jgcu$:function($receiver, newIndent) {
@@ -17888,13 +19506,13 @@
     if (newIndent === void 0) {
       newIndent = "";
     }
-    var lines = _.kotlin.lines_pdl1w0$($receiver);
+    var lines = _.kotlin.lines_gw00vq$($receiver);
     var destination = new Kotlin.ArrayList;
     var tmp$1;
     tmp$1 = lines.iterator();
     while (tmp$1.hasNext()) {
       var element = tmp$1.next();
-      if (_.kotlin.isNotBlank_pdl1w0$(element)) {
+      if (_.kotlin.isNotBlank_gw00vq$(element)) {
         destination.add_za3rmp$(element);
       }
     }
@@ -17917,12 +19535,12 @@
       var item_0 = tmp$5.next();
       var index_0 = index++;
       var tmp$4, tmp$3;
-      destination_1.add_za3rmp$((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_pdl1w0$(item_0) ? null : (tmp$3 = (tmp$4 = _.kotlin.drop_n7iutu$(item_0, minCommonIndent)) != null ? _.kotlin.let_7hr6ff$(tmp$4, _.kotlin.f_1(indentAddFunction)) : null) != null ? tmp$3 : item_0);
+      destination_1.add_za3rmp$((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_gw00vq$(item_0) ? null : (tmp$3 = (tmp$4 = _.kotlin.drop_n7iutu$(item_0, minCommonIndent)) != null ? _.kotlin.let_7hr6ff$(tmp$4, _.kotlin.f_9(indentAddFunction)) : null) != null ? tmp$3 : item_0);
     }
-    return _.kotlin.joinTo_3o8ep9$(_.kotlin.filterNotNull_ir3nkc$(destination_1), new Kotlin.StringBuilder, "\n").toString();
+    return _.kotlin.joinTo_pzhnk5$(_.kotlin.filterNotNull_ir3nkc$(destination_1), new Kotlin.StringBuilder, "\n").toString();
   }, prependIndent_94jgcu$f:function(indent) {
     return function(it) {
-      if (_.kotlin.isBlank_pdl1w0$(it)) {
+      if (_.kotlin.isBlank_gw00vq$(it)) {
         if (_.kotlin.length_gw00vq$(it) < _.kotlin.length_gw00vq$(indent)) {
           return indent;
         } else {
@@ -17936,22 +19554,22 @@
     if (indent === void 0) {
       indent = "    ";
     }
-    return _.kotlin.joinToString_htaozy$(_.kotlin.map_hg3um1$(_.kotlin.lineSequence_pdl1w0$($receiver), _.kotlin.prependIndent_94jgcu$f(indent)), "\n");
+    return _.kotlin.joinToString_oan0sg$(_.kotlin.map_hg3um1$(_.kotlin.lineSequence_gw00vq$($receiver), _.kotlin.prependIndent_94jgcu$f(indent)), "\n");
   }, indentWidth:function($receiver) {
-    var indexOfFirst_ggikb8$result;
-    indexOfFirst_ggikb8$break: {
+    var indexOfFirst_gwcya$result;
+    indexOfFirst_gwcya$break: {
       var tmp$0, tmp$1, tmp$2, tmp$3;
-      tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+      tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
       for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
         var it = $receiver.charAt(index);
         if (!_.kotlin.isWhitespace_myv2d1$(it)) {
-          indexOfFirst_ggikb8$result = index;
-          break indexOfFirst_ggikb8$break;
+          indexOfFirst_gwcya$result = index;
+          break indexOfFirst_gwcya$break;
         }
       }
-      indexOfFirst_ggikb8$result = -1;
+      indexOfFirst_gwcya$result = -1;
     }
-    return indexOfFirst_ggikb8$result === -1 ? _.kotlin.length_gw00vq$($receiver) : indexOfFirst_ggikb8$result;
+    return indexOfFirst_gwcya$result === -1 ? _.kotlin.length_gw00vq$($receiver) : indexOfFirst_gwcya$result;
   }, getIndentFunction$f:function(line) {
     return line;
   }, getIndentFunction$f_0:function(indent) {
@@ -17959,12 +19577,12 @@
       return indent.concat(line);
     };
   }, getIndentFunction:function(indent) {
-    if (_.kotlin.isEmpty_pdl1w0$(indent)) {
+    if (_.kotlin.isEmpty_gw00vq$(indent)) {
       return _.kotlin.getIndentFunction$f;
     } else {
       return _.kotlin.getIndentFunction$f_0(indent);
     }
-  }, f_1:function(indentAddFunction) {
+  }, f_9:function(indentAddFunction) {
     return function(cutted) {
       return indentAddFunction(cutted);
     };
@@ -17978,9 +19596,9 @@
       var item = tmp$0.next();
       var index_0 = index++;
       var tmp$2, tmp$1;
-      destination.add_za3rmp$((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_pdl1w0$(item) ? null : (tmp$1 = (tmp$2 = indentCutFunction(item)) != null ? _.kotlin.let_7hr6ff$(tmp$2, _.kotlin.f_1(indentAddFunction)) : null) != null ? tmp$1 : item);
+      destination.add_za3rmp$((index_0 === 0 || index_0 === lastIndex) && _.kotlin.isBlank_gw00vq$(item) ? null : (tmp$1 = (tmp$2 = indentCutFunction(item)) != null ? _.kotlin.let_7hr6ff$(tmp$2, _.kotlin.f_9(indentAddFunction)) : null) != null ? tmp$1 : item);
     }
-    return _.kotlin.joinTo_3o8ep9$(_.kotlin.filterNotNull_ir3nkc$(destination), new Kotlin.StringBuilder, "\n").toString();
+    return _.kotlin.joinTo_pzhnk5$(_.kotlin.filterNotNull_ir3nkc$(destination), new Kotlin.StringBuilder, "\n").toString();
   }, StringBuilder_bb10bd$:Kotlin.defineInlineFunction("stdlib.kotlin.StringBuilder_bb10bd$", function(body) {
     var $receiver = new Kotlin.StringBuilder;
     body.call($receiver);
@@ -18013,7 +19631,7 @@
       $receiver.append(item);
     }
     return $receiver;
-  }, trim_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.trim_ggikb8$", function($receiver, predicate) {
+  }, trim_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.trim_gwcya$", function($receiver, predicate) {
     var startIndex = 0;
     var endIndex = _.kotlin.length_gw00vq$($receiver) - 1;
     var startFound = false;
@@ -18035,26 +19653,77 @@
       }
     }
     return $receiver.substring(startIndex, endIndex + 1);
-  }), trimStart_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.trimStart_ggikb8$", function($receiver, predicate) {
+  }), trim_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.trim_ggikb8$", function($receiver, predicate) {
+    var startIndex = 0;
+    var endIndex = _.kotlin.length_gw00vq$($receiver) - 1;
+    var startFound = false;
+    while (startIndex <= endIndex) {
+      var index = !startFound ? startIndex : endIndex;
+      var match = predicate($receiver.charAt(index));
+      if (!startFound) {
+        if (!match) {
+          startFound = true;
+        } else {
+          startIndex += 1;
+        }
+      } else {
+        if (!match) {
+          break;
+        } else {
+          endIndex -= 1;
+        }
+      }
+    }
+    return $receiver.substring(startIndex, endIndex + 1).toString();
+  }), trimStart_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.trimStart_gwcya$", function($receiver, predicate) {
     var tmp$0, tmp$1, tmp$2, tmp$3;
-    tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
     for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
       if (!predicate($receiver.charAt(index))) {
-        return $receiver.substring(index);
+        return $receiver.substring(index, $receiver.length);
+      }
+    }
+    return "";
+  }), trimStart_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.trimStart_ggikb8$", function($receiver, predicate) {
+    var trimStart_gwcya$result;
+    trimStart_gwcya$break: {
+      var tmp$0, tmp$1, tmp$2, tmp$3;
+      tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+      for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
+        if (!predicate($receiver.charAt(index))) {
+          trimStart_gwcya$result = $receiver.substring(index, $receiver.length);
+          break trimStart_gwcya$break;
+        }
+      }
+      trimStart_gwcya$result = "";
+    }
+    return trimStart_gwcya$result.toString();
+  }), trimEnd_gwcya$:Kotlin.defineInlineFunction("stdlib.kotlin.trimEnd_gwcya$", function($receiver, predicate) {
+    var tmp$0;
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+    while (tmp$0.hasNext()) {
+      var index = tmp$0.next();
+      if (!predicate($receiver.charAt(index))) {
+        return _.kotlin.substring_7bp3tu$($receiver, 0, index + 1);
       }
     }
     return "";
   }), trimEnd_ggikb8$:Kotlin.defineInlineFunction("stdlib.kotlin.trimEnd_ggikb8$", function($receiver, predicate) {
-    var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_pdl1w0$($receiver)).iterator();
-    while (tmp$0.hasNext()) {
-      var index = tmp$0.next();
-      if (!predicate($receiver.charAt(index))) {
-        return $receiver.substring(0, index + 1);
+    var trimEnd_gwcya$result;
+    trimEnd_gwcya$break: {
+      var tmp$0;
+      tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+      while (tmp$0.hasNext()) {
+        var index = tmp$0.next();
+        if (!predicate($receiver.charAt(index))) {
+          trimEnd_gwcya$result = _.kotlin.substring_7bp3tu$($receiver, 0, index + 1);
+          break trimEnd_gwcya$break;
+        }
       }
+      trimEnd_gwcya$result = "";
     }
-    return "";
-  }), trim_1hgcu2$:function($receiver, chars) {
+    return trimEnd_gwcya$result.toString();
+  }), trim_g0p4tc$:function($receiver, chars) {
     var startIndex = 0;
     var endIndex = _.kotlin.length_gw00vq$($receiver) - 1;
     var startFound = false;
@@ -18077,28 +19746,82 @@
       }
     }
     return $receiver.substring(startIndex, endIndex + 1);
-  }, trimStart_1hgcu2$:function($receiver, chars) {
+  }, trim_1hgcu2$:function($receiver, chars) {
+    var startIndex = 0;
+    var endIndex = _.kotlin.length_gw00vq$($receiver) - 1;
+    var startFound = false;
+    while (startIndex <= endIndex) {
+      var index = !startFound ? startIndex : endIndex;
+      var it = $receiver.charAt(index);
+      var match = _.kotlin.contains_q79yhh$(chars, it);
+      if (!startFound) {
+        if (!match) {
+          startFound = true;
+        } else {
+          startIndex += 1;
+        }
+      } else {
+        if (!match) {
+          break;
+        } else {
+          endIndex -= 1;
+        }
+      }
+    }
+    return $receiver.substring(startIndex, endIndex + 1).toString();
+  }, trimStart_g0p4tc$:function($receiver, chars) {
     var tmp$0, tmp$1, tmp$2, tmp$3;
-    tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
     for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
       var it = $receiver.charAt(index);
       if (!_.kotlin.contains_q79yhh$(chars, it)) {
-        return $receiver.substring(index);
+        return $receiver.substring(index, $receiver.length);
       }
     }
     return "";
-  }, trimEnd_1hgcu2$:function($receiver, chars) {
+  }, trimStart_1hgcu2$:function($receiver, chars) {
+    var trimStart_gwcya$result;
+    trimStart_gwcya$break: {
+      var tmp$0, tmp$1, tmp$2, tmp$3;
+      tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+      for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
+        var it = $receiver.charAt(index);
+        if (!_.kotlin.contains_q79yhh$(chars, it)) {
+          trimStart_gwcya$result = $receiver.substring(index, $receiver.length);
+          break trimStart_gwcya$break;
+        }
+      }
+      trimStart_gwcya$result = "";
+    }
+    return trimStart_gwcya$result.toString();
+  }, trimEnd_g0p4tc$:function($receiver, chars) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_pdl1w0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var it = $receiver.charAt(index);
       if (!_.kotlin.contains_q79yhh$(chars, it)) {
-        return $receiver.substring(0, index + 1);
+        return _.kotlin.substring_7bp3tu$($receiver, 0, index + 1);
       }
     }
     return "";
-  }, trim_pdl1w0$:function($receiver) {
+  }, trimEnd_1hgcu2$:function($receiver, chars) {
+    var trimEnd_gwcya$result;
+    trimEnd_gwcya$break: {
+      var tmp$0;
+      tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
+      while (tmp$0.hasNext()) {
+        var index = tmp$0.next();
+        var it = $receiver.charAt(index);
+        if (!_.kotlin.contains_q79yhh$(chars, it)) {
+          trimEnd_gwcya$result = _.kotlin.substring_7bp3tu$($receiver, 0, index + 1);
+          break trimEnd_gwcya$break;
+        }
+      }
+      trimEnd_gwcya$result = "";
+    }
+    return trimEnd_gwcya$result.toString();
+  }, trim_gw00vq$:function($receiver) {
     var startIndex = 0;
     var endIndex = _.kotlin.length_gw00vq$($receiver) - 1;
     var startFound = false;
@@ -18121,75 +19844,89 @@
       }
     }
     return $receiver.substring(startIndex, endIndex + 1);
-  }, trimStart_pdl1w0$:function($receiver) {
+  }, trim_pdl1w0$:function($receiver) {
+    return _.kotlin.trim_gw00vq$($receiver).toString();
+  }, trimStart_gw00vq$:function($receiver) {
     var tmp$0, tmp$1, tmp$2, tmp$3;
-    tmp$0 = _.kotlin.get_indices_pdl1w0$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
+    tmp$0 = _.kotlin.get_indices_gw00vq$($receiver), tmp$1 = tmp$0.start, tmp$2 = tmp$0.end, tmp$3 = tmp$0.increment;
     for (var index = tmp$1;index <= tmp$2;index += tmp$3) {
       var it = $receiver.charAt(index);
       if (!_.kotlin.isWhitespace_myv2d1$(it)) {
-        return $receiver.substring(index);
+        return $receiver.substring(index, $receiver.length);
       }
     }
     return "";
-  }, trimEnd_pdl1w0$:function($receiver) {
+  }, trimStart_pdl1w0$:function($receiver) {
+    return _.kotlin.trimStart_gw00vq$($receiver).toString();
+  }, trimEnd_gw00vq$:function($receiver) {
     var tmp$0;
-    tmp$0 = _.kotlin.reversed_lufotp$(_.kotlin.get_indices_pdl1w0$($receiver)).iterator();
+    tmp$0 = _.kotlin.reversed_d4iyj9$(_.kotlin.get_indices_gw00vq$($receiver)).iterator();
     while (tmp$0.hasNext()) {
       var index = tmp$0.next();
       var it = $receiver.charAt(index);
       if (!_.kotlin.isWhitespace_myv2d1$(it)) {
-        return $receiver.substring(0, index + 1);
+        return _.kotlin.substring_7bp3tu$($receiver, 0, index + 1);
       }
     }
     return "";
+  }, trimEnd_pdl1w0$:function($receiver) {
+    return _.kotlin.trimEnd_gw00vq$($receiver).toString();
+  }, padStart_dz660z$:function($receiver, length, padChar) {
+    var tmp$0;
+    if (padChar === void 0) {
+      padChar = " ";
+    }
+    if (length < 0) {
+      throw new Kotlin.IllegalArgumentException("Desired length " + length + " is less than zero.");
+    }
+    if (length <= $receiver.length) {
+      return $receiver.substring(0, $receiver.length);
+    }
+    var sb = new Kotlin.StringBuilder;
+    tmp$0 = length - $receiver.length;
+    for (var i = 1;i <= tmp$0;i++) {
+      sb.append(padChar);
+    }
+    sb.append($receiver);
+    return sb;
   }, padStart_b68f8p$:function($receiver, length, padChar) {
+    if (padChar === void 0) {
+      padChar = " ";
+    }
+    return _.kotlin.padStart_dz660z$($receiver, length, padChar).toString();
+  }, padEnd_dz660z$:function($receiver, length, padChar) {
     var tmp$0;
     if (padChar === void 0) {
       padChar = " ";
     }
     if (length < 0) {
-      throw new Kotlin.IllegalArgumentException("String length " + length + " is less than zero.");
+      throw new Kotlin.IllegalArgumentException("Desired length " + length + " is less than zero.");
     }
-    if (length <= _.kotlin.length_gw00vq$($receiver)) {
-      return $receiver;
+    if (length <= $receiver.length) {
+      return $receiver.substring(0, $receiver.length);
     }
     var sb = new Kotlin.StringBuilder;
-    tmp$0 = length - _.kotlin.length_gw00vq$($receiver);
+    sb.append($receiver);
+    tmp$0 = length - $receiver.length;
     for (var i = 1;i <= tmp$0;i++) {
       sb.append(padChar);
     }
-    sb.append($receiver);
-    return sb.toString();
+    return sb;
   }, padEnd_b68f8p$:function($receiver, length, padChar) {
-    var tmp$0;
     if (padChar === void 0) {
       padChar = " ";
     }
-    if (length < 0) {
-      throw new Kotlin.IllegalArgumentException("String length " + length + " is less than zero.");
-    }
-    if (length <= _.kotlin.length_gw00vq$($receiver)) {
-      return $receiver;
-    }
-    var sb = new Kotlin.StringBuilder;
-    sb.append($receiver);
-    tmp$0 = length - _.kotlin.length_gw00vq$($receiver);
-    for (var i = 1;i <= tmp$0;i++) {
-      sb.append(padChar);
-    }
-    return sb.toString();
-  }, isNotEmpty_pdl1w0$_0:function($receiver) {
-    return $receiver != null && _.kotlin.length_gw00vq$($receiver) > 0;
-  }, isNullOrEmpty_pdl1w0$:function($receiver) {
+    return _.kotlin.padEnd_dz660z$($receiver, length, padChar).toString();
+  }, isNullOrEmpty_gw00vq$:function($receiver) {
     return $receiver == null || _.kotlin.length_gw00vq$($receiver) === 0;
-  }, isEmpty_pdl1w0$:function($receiver) {
+  }, isEmpty_gw00vq$:function($receiver) {
     return _.kotlin.length_gw00vq$($receiver) === 0;
-  }, isNotEmpty_pdl1w0$:function($receiver) {
+  }, isNotEmpty_gw00vq$:function($receiver) {
     return _.kotlin.length_gw00vq$($receiver) > 0;
-  }, isNotBlank_pdl1w0$:function($receiver) {
-    return!_.kotlin.isBlank_pdl1w0$($receiver);
-  }, isNullOrBlank_pdl1w0$:function($receiver) {
-    return $receiver == null || _.kotlin.isBlank_pdl1w0$($receiver);
+  }, isNotBlank_gw00vq$:function($receiver) {
+    return!_.kotlin.isBlank_gw00vq$($receiver);
+  }, isNullOrBlank_gw00vq$:function($receiver) {
+    return $receiver == null || _.kotlin.isBlank_gw00vq$($receiver);
   }, iterator_gw00vq$:function($receiver) {
     return Kotlin.createObject(function() {
       return[Kotlin.modules["builtins"].kotlin.CharIterator];
@@ -18203,125 +19940,74 @@
     }});
   }, orEmpty_pdl1w0$:function($receiver) {
     return $receiver != null ? $receiver : "";
-  }, get_indices_pdl1w0$:{value:function($receiver) {
+  }, get_indices_gw00vq$:{value:function($receiver) {
     return new Kotlin.NumberRange(0, _.kotlin.length_gw00vq$($receiver) - 1);
-  }}, get_lastIndex_pdl1w0$:{value:function($receiver) {
+  }}, get_lastIndex_gw00vq$:{value:function($receiver) {
     return _.kotlin.length_gw00vq$($receiver) - 1;
   }}, get_kljjvw$:function($receiver, index) {
     return $receiver.charAt(index);
   }, hasSurrogatePairAt_kljjvw$:function($receiver, index) {
-    return(new Kotlin.NumberRange(0, _.kotlin.length_gw00vq$($receiver) - 2)).contains(index) && (_.kotlin.isHighSurrogate_myv2d1$($receiver.charAt(index)) && _.kotlin.isLowSurrogate_myv2d1$($receiver.charAt(index + 1)));
-  }, slice_wxqf4b$:function($receiver, indices) {
-    var tmp$0;
-    var sb = new Kotlin.StringBuilder;
-    tmp$0 = indices.iterator();
-    while (tmp$0.hasNext()) {
-      var i = tmp$0.next();
-      sb.append($receiver.charAt(i));
-    }
-    return sb.toString();
+    return(new Kotlin.NumberRange(0, _.kotlin.length_gw00vq$($receiver) - 2)).contains_htax2k$(index) && (_.kotlin.isHighSurrogate_myv2d1$($receiver.charAt(index)) && _.kotlin.isLowSurrogate_myv2d1$($receiver.charAt(index + 1)));
   }, substring_cumll7$:function($receiver, range) {
     return $receiver.substring(range.start, range.end + 1);
-  }, join_raq5lb$:function($receiver, separator, prefix, postfix, limit, truncated) {
-    if (separator === void 0) {
-      separator = ", ";
+  }, subSequence_xb7ld$:function($receiver, range) {
+    return $receiver.substring(range.start, range.end + 1);
+  }, substring_7bp3tu$:function($receiver, start, end) {
+    if (end === void 0) {
+      end = $receiver.length;
     }
-    if (prefix === void 0) {
-      prefix = "";
-    }
-    if (postfix === void 0) {
-      postfix = "";
-    }
-    if (limit === void 0) {
-      limit = -1;
-    }
-    if (truncated === void 0) {
-      truncated = "...";
-    }
-    return _.kotlin.joinToString_aw7tsx$($receiver, separator, prefix, postfix, limit, truncated);
-  }, join_i2lh6s$:function($receiver, separator, prefix, postfix, limit, truncated) {
-    if (separator === void 0) {
-      separator = ", ";
-    }
-    if (prefix === void 0) {
-      prefix = "";
-    }
-    if (postfix === void 0) {
-      postfix = "";
-    }
-    if (limit === void 0) {
-      limit = -1;
-    }
-    if (truncated === void 0) {
-      truncated = "...";
-    }
-    return _.kotlin.joinToString_rao0bw$($receiver, separator, prefix, postfix, limit, truncated);
-  }, join_1uxeq$:function($receiver, separator, prefix, postfix, limit, truncated) {
-    if (separator === void 0) {
-      separator = ", ";
-    }
-    if (prefix === void 0) {
-      prefix = "";
-    }
-    if (postfix === void 0) {
-      postfix = "";
-    }
-    if (limit === void 0) {
-      limit = -1;
-    }
-    if (truncated === void 0) {
-      truncated = "...";
-    }
-    return _.kotlin.joinToString_htaozy$($receiver, separator, prefix, postfix, limit, truncated);
+    return $receiver.substring(start, end).toString();
+  }, substring_xb7ld$:function($receiver, range) {
+    return $receiver.substring(range.start, range.end + 1).toString();
   }, substringBefore_7uhrl1$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_p76d2s$($receiver, delimiter);
+    var index = _.kotlin.indexOf_ilfvta$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(0, index);
   }, substringBefore_ex0kps$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_rh6gah$($receiver, delimiter);
+    var index = _.kotlin.indexOf_30chhv$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(0, index);
   }, substringAfter_7uhrl1$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_p76d2s$($receiver, delimiter);
+    var index = _.kotlin.indexOf_ilfvta$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(index + 1, _.kotlin.length_gw00vq$($receiver));
   }, substringAfter_ex0kps$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_rh6gah$($receiver, delimiter);
+    var index = _.kotlin.indexOf_30chhv$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver));
   }, substringBeforeLast_7uhrl1$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_p76d2s$($receiver, delimiter);
+    var index = _.kotlin.lastIndexOf_ilfvta$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(0, index);
   }, substringBeforeLast_ex0kps$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_rh6gah$($receiver, delimiter);
+    var index = _.kotlin.lastIndexOf_30chhv$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(0, index);
   }, substringAfterLast_7uhrl1$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_p76d2s$($receiver, delimiter);
+    var index = _.kotlin.lastIndexOf_ilfvta$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(index + 1, _.kotlin.length_gw00vq$($receiver));
   }, substringAfterLast_ex0kps$:function($receiver, delimiter, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_rh6gah$($receiver, delimiter);
+    var index = _.kotlin.lastIndexOf_30chhv$($receiver, delimiter);
     return index === -1 ? missingDelimiterValue : $receiver.substring(index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver));
-  }, replaceRange_d9884y$:function($receiver, firstIndex, lastIndex, replacement) {
+  }, replaceRange_r7eg9y$:function($receiver, firstIndex, lastIndex, replacement) {
     if (lastIndex < firstIndex) {
       throw new Kotlin.IndexOutOfBoundsException("Last index (" + lastIndex + ") is less than first index (" + firstIndex + ")");
     }
@@ -18329,92 +20015,117 @@
     sb.append($receiver, 0, firstIndex);
     sb.append(replacement);
     sb.append($receiver, lastIndex, _.kotlin.length_gw00vq$($receiver));
-    return sb.toString();
-  }, replaceRange_rxpzkz$:function($receiver, range, replacement) {
-    return _.kotlin.replaceRange_d9884y$($receiver, range.start, range.end + 1, replacement);
-  }, removeRange_78fvzw$:function($receiver, firstIndex, lastIndex) {
+    return sb;
+  }, replaceRange_tb247g$:function($receiver, firstIndex, lastIndex, replacement) {
+    return _.kotlin.replaceRange_r7eg9y$($receiver, firstIndex, lastIndex, replacement).toString();
+  }, replaceRange_nkri6v$:function($receiver, range, replacement) {
+    return _.kotlin.replaceRange_r7eg9y$($receiver, range.start, range.end + 1, replacement);
+  }, replaceRange_foao8t$:function($receiver, range, replacement) {
+    return _.kotlin.replaceRange_tb247g$($receiver, range.start, range.end + 1, replacement);
+  }, removeRange_7bp3tu$:function($receiver, firstIndex, lastIndex) {
     if (lastIndex < firstIndex) {
       throw new Kotlin.IndexOutOfBoundsException("Last index (" + lastIndex + ") is less than first index (" + firstIndex + ")");
     }
     if (lastIndex === firstIndex) {
-      return $receiver;
+      return $receiver.substring(0, $receiver.length);
     }
     var capacity = _.kotlin.length_gw00vq$($receiver) - (lastIndex - firstIndex);
     var sb = new Kotlin.StringBuilder;
     sb.append($receiver, 0, firstIndex);
     sb.append($receiver, lastIndex, _.kotlin.length_gw00vq$($receiver));
-    return sb.toString();
+    return sb;
+  }, removeRange_78fvzw$:function($receiver, firstIndex, lastIndex) {
+    return _.kotlin.removeRange_7bp3tu$($receiver, firstIndex, lastIndex).toString();
+  }, removeRange_xb7ld$:function($receiver, range) {
+    return _.kotlin.removeRange_7bp3tu$($receiver, range.start, range.end + 1);
   }, removeRange_cumll7$:function($receiver, range) {
     return _.kotlin.removeRange_78fvzw$($receiver, range.start, range.end + 1);
-  }, removePrefix_94jgcu$:function($receiver, prefix) {
-    if (_.kotlin.startsWith_41xvrb$($receiver, prefix)) {
-      return $receiver.substring(_.kotlin.length_gw00vq$(prefix));
+  }, removePrefix_4ewbza$:function($receiver, prefix) {
+    if (_.kotlin.startsWith_kzp0od$($receiver, prefix)) {
+      return $receiver.substring(prefix.length, $receiver.length);
+    }
+    return $receiver.substring(0, $receiver.length);
+  }, removePrefix_a14n4c$:function($receiver, prefix) {
+    if (_.kotlin.startsWith_kzp0od$($receiver, prefix)) {
+      return $receiver.substring(prefix.length);
     }
     return $receiver;
-  }, removeSuffix_94jgcu$:function($receiver, suffix) {
-    if (_.kotlin.endsWith_41xvrb$($receiver, suffix)) {
-      return $receiver.substring(0, _.kotlin.length_gw00vq$($receiver) - _.kotlin.length_gw00vq$(suffix));
+  }, removeSuffix_4ewbza$:function($receiver, suffix) {
+    if (_.kotlin.endsWith_kzp0od$($receiver, suffix)) {
+      return $receiver.substring(0, $receiver.length - suffix.length);
+    }
+    return $receiver.substring(0, $receiver.length);
+  }, removeSuffix_a14n4c$:function($receiver, suffix) {
+    if (_.kotlin.endsWith_kzp0od$($receiver, suffix)) {
+      return $receiver.substring(0, $receiver.length - suffix.length);
     }
     return $receiver;
-  }, removeSurrounding_ex0kps$:function($receiver, prefix, suffix) {
-    if (_.kotlin.startsWith_41xvrb$($receiver, prefix) && _.kotlin.endsWith_41xvrb$($receiver, suffix)) {
-      return $receiver.substring(_.kotlin.length_gw00vq$(prefix), _.kotlin.length_gw00vq$($receiver) - _.kotlin.length_gw00vq$(suffix));
+  }, removeSurrounding_9b5scy$:function($receiver, prefix, suffix) {
+    if ($receiver.length >= prefix.length + suffix.length && (_.kotlin.startsWith_kzp0od$($receiver, prefix) && _.kotlin.endsWith_kzp0od$($receiver, suffix))) {
+      return $receiver.substring(prefix.length, $receiver.length - suffix.length);
+    }
+    return $receiver.substring(0, $receiver.length);
+  }, removeSurrounding_f5o6fo$:function($receiver, prefix, suffix) {
+    if ($receiver.length >= prefix.length + suffix.length && (_.kotlin.startsWith_kzp0od$($receiver, prefix) && _.kotlin.endsWith_kzp0od$($receiver, suffix))) {
+      return $receiver.substring(prefix.length, $receiver.length - suffix.length);
     }
     return $receiver;
-  }, removeSurrounding_94jgcu$:function($receiver, delimiter) {
-    return _.kotlin.removeSurrounding_ex0kps$($receiver, delimiter, delimiter);
+  }, removeSurrounding_4ewbza$:function($receiver, delimiter) {
+    return _.kotlin.removeSurrounding_9b5scy$($receiver, delimiter, delimiter);
+  }, removeSurrounding_a14n4c$:function($receiver, delimiter) {
+    return _.kotlin.removeSurrounding_f5o6fo$($receiver, delimiter, delimiter);
   }, replaceBefore_tzm4on$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_p76d2s$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, 0, index, replacement);
+    var index = _.kotlin.indexOf_ilfvta$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, 0, index, replacement);
   }, replaceBefore_s3e0ge$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_rh6gah$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, 0, index, replacement);
+    var index = _.kotlin.indexOf_30chhv$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, 0, index, replacement);
   }, replaceAfter_tzm4on$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_p76d2s$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, index + 1, _.kotlin.length_gw00vq$($receiver), replacement);
+    var index = _.kotlin.indexOf_ilfvta$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, index + 1, _.kotlin.length_gw00vq$($receiver), replacement);
   }, replaceAfter_s3e0ge$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.indexOf_rh6gah$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver), replacement);
+    var index = _.kotlin.indexOf_30chhv$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver), replacement);
   }, replaceAfterLast_s3e0ge$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_rh6gah$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver), replacement);
+    var index = _.kotlin.lastIndexOf_30chhv$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, index + _.kotlin.length_gw00vq$(delimiter), _.kotlin.length_gw00vq$($receiver), replacement);
   }, replaceAfterLast_tzm4on$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_p76d2s$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, index + 1, _.kotlin.length_gw00vq$($receiver), replacement);
+    var index = _.kotlin.lastIndexOf_ilfvta$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, index + 1, _.kotlin.length_gw00vq$($receiver), replacement);
   }, replaceBeforeLast_tzm4on$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_p76d2s$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, 0, index, replacement);
+    var index = _.kotlin.lastIndexOf_ilfvta$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, 0, index, replacement);
   }, replaceBeforeLast_s3e0ge$:function($receiver, delimiter, replacement, missingDelimiterValue) {
     if (missingDelimiterValue === void 0) {
       missingDelimiterValue = $receiver;
     }
-    var index = _.kotlin.lastIndexOf_rh6gah$($receiver, delimiter);
-    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_d9884y$($receiver, 0, index, replacement);
-  }, replace_m572s5$:function($receiver, regex, replacement) {
+    var index = _.kotlin.lastIndexOf_30chhv$($receiver, delimiter);
+    return index === -1 ? missingDelimiterValue : _.kotlin.replaceRange_tb247g$($receiver, 0, index, replacement);
+  }, replace_8h3bgl$:function($receiver, regex, replacement) {
     return regex.replace_x2uqeu$($receiver, replacement);
-  }, replace_qdwfyd$:function($receiver, regex, transform) {
-    var match = regex.match_905azu$($receiver);
+  }, replace_c95is1$:function($receiver, regex, transform) {
+    var match = regex.find_905azu$($receiver);
     if (match == null) {
       return $receiver.toString();
     }
@@ -18432,20 +20143,59 @@
       sb.append($receiver, lastStart, length);
     }
     return sb.toString();
-  }, replaceFirst_m572s5$:function($receiver, regex, replacement) {
+  }, replaceFirst_8h3bgl$:function($receiver, regex, replacement) {
     return regex.replaceFirst_x2uqeu$($receiver, replacement);
-  }, matches_124qgt$:function($receiver, regex) {
+  }, matches_pg0hzr$:function($receiver, regex) {
     return regex.matches_6bul2c$($receiver);
-  }, startsWith_8o9u7g$:function($receiver, char, ignoreCase) {
+  }, regionMatchesImpl:function($receiver, thisOffset, other, otherOffset, length, ignoreCase) {
+    var tmp$0;
+    if (otherOffset < 0 || (thisOffset < 0 || (thisOffset > $receiver.length - length || otherOffset > other.length - length))) {
+      return false;
+    }
+    tmp$0 = length - 1;
+    for (var index = 0;index <= tmp$0;index++) {
+      if (!_.kotlin.equals_bapbyp$($receiver.charAt(thisOffset + index), other.charAt(otherOffset + index), ignoreCase)) {
+        return false;
+      }
+    }
+    return true;
+  }, startsWith_cjsvxq$:function($receiver, char, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
     return _.kotlin.length_gw00vq$($receiver) > 0 && _.kotlin.equals_bapbyp$($receiver.charAt(0), char, ignoreCase);
-  }, endsWith_8o9u7g$:function($receiver, char, ignoreCase) {
+  }, endsWith_cjsvxq$:function($receiver, char, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return _.kotlin.length_gw00vq$($receiver) > 0 && _.kotlin.equals_bapbyp$($receiver.charAt(_.kotlin.get_lastIndex_pdl1w0$($receiver)), char, ignoreCase);
+    return _.kotlin.length_gw00vq$($receiver) > 0 && _.kotlin.equals_bapbyp$($receiver.charAt(_.kotlin.get_lastIndex_gw00vq$($receiver)), char, ignoreCase);
+  }, startsWith_kzp0od$:function($receiver, prefix, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (!ignoreCase && (typeof $receiver === "string" && typeof prefix === "string")) {
+      return _.kotlin.startsWith_41xvrb$($receiver, prefix);
+    } else {
+      return _.kotlin.regionMatchesImpl($receiver, 0, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
+    }
+  }, startsWith_q2992l$:function($receiver, prefix, thisOffset, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (!ignoreCase && (typeof $receiver === "string" && typeof prefix === "string")) {
+      return _.kotlin.startsWith_rh6gah$($receiver, prefix, thisOffset);
+    } else {
+      return _.kotlin.regionMatchesImpl($receiver, thisOffset, prefix, 0, _.kotlin.length_gw00vq$(prefix), ignoreCase);
+    }
+  }, endsWith_kzp0od$:function($receiver, suffix, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (!ignoreCase && (typeof $receiver === "string" && typeof suffix === "string")) {
+      return _.kotlin.endsWith_41xvrb$($receiver, suffix);
+    } else {
+      return _.kotlin.regionMatchesImpl($receiver, _.kotlin.length_gw00vq$($receiver) - _.kotlin.length_gw00vq$(suffix), suffix, 0, _.kotlin.length_gw00vq$(suffix), ignoreCase);
+    }
   }, commonPrefixWith_kzp0od$:function($receiver, other, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -18476,12 +20226,448 @@
     return $receiver.substring(thisLength - i, thisLength).toString();
   }, findAnyOf:function($receiver, chars, startIndex, ignoreCase, last) {
     var tmp$0;
+    if (!ignoreCase && (chars.length === 1 && typeof $receiver === "string")) {
+      var char = _.kotlin.single_355nu0$(chars);
+      var index = !last ? $receiver.indexOf(char.toString(), startIndex) : $receiver.lastIndexOf(char.toString(), startIndex);
+      return index < 0 ? null : _.kotlin.to_l1ob02$(index, char);
+    }
+    var indices = !last ? new Kotlin.NumberRange(Math.max(startIndex, 0), _.kotlin.get_lastIndex_gw00vq$($receiver)) : _.kotlin.downTo_rksjo2$(Math.min(startIndex, _.kotlin.get_lastIndex_gw00vq$($receiver)), 0);
+    tmp$0 = indices.iterator();
+    while (tmp$0.hasNext()) {
+      var index_0 = tmp$0.next();
+      var charAtIndex = $receiver.charAt(index_0);
+      var matchingCharIndex;
+      indexOfFirst_mf0bwc$break: {
+        var tmp$4, tmp$1, tmp$2, tmp$3;
+        tmp$4 = _.kotlin.get_indices_355nu0$(chars), tmp$1 = tmp$4.start, tmp$2 = tmp$4.end, tmp$3 = tmp$4.increment;
+        for (var index_1 = tmp$1;index_1 <= tmp$2;index_1 += tmp$3) {
+          if (_.kotlin.equals_bapbyp$(chars[index_1], charAtIndex, ignoreCase)) {
+            matchingCharIndex = index_1;
+            break indexOfFirst_mf0bwc$break;
+          }
+        }
+        matchingCharIndex = -1;
+      }
+      if (matchingCharIndex >= 0) {
+        return _.kotlin.to_l1ob02$(index_0, chars[matchingCharIndex]);
+      }
+    }
+    return null;
+  }, indexOfAny_cfilrb$:function($receiver, chars, startIndex, ignoreCase) {
+    var tmp$0, tmp$1;
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf($receiver, chars, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+  }, lastIndexOfAny_cfilrb$:function($receiver, chars, startIndex, ignoreCase) {
+    var tmp$0, tmp$1;
+    if (startIndex === void 0) {
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf($receiver, chars, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+  }, indexOf_1:function($receiver, other, startIndex, endIndex, ignoreCase, last) {
+    var tmp$0, tmp$1;
+    if (last === void 0) {
+      last = false;
+    }
+    var indices = !last ? new Kotlin.NumberRange(_.kotlin.coerceAtLeast_rksjo2$(startIndex, 0), _.kotlin.coerceAtMost_rksjo2$(endIndex, _.kotlin.length_gw00vq$($receiver))) : _.kotlin.downTo_rksjo2$(_.kotlin.coerceAtMost_rksjo2$(startIndex, _.kotlin.get_lastIndex_gw00vq$($receiver)), _.kotlin.coerceAtLeast_rksjo2$(endIndex, 0));
+    if (typeof $receiver === "string" && typeof other === "string") {
+      tmp$0 = indices.iterator();
+      while (tmp$0.hasNext()) {
+        var index = tmp$0.next();
+        if (_.kotlin.regionMatches_qb0ndp$(other, 0, $receiver, index, _.kotlin.length_gw00vq$(other), ignoreCase)) {
+          return index;
+        }
+      }
+    } else {
+      tmp$1 = indices.iterator();
+      while (tmp$1.hasNext()) {
+        var index_0 = tmp$1.next();
+        if (_.kotlin.regionMatchesImpl(other, 0, $receiver, index_0, _.kotlin.length_gw00vq$(other), ignoreCase)) {
+          return index_0;
+        }
+      }
+    }
+    return-1;
+  }, findAnyOf_1:function($receiver, strings, startIndex, ignoreCase, last) {
+    var tmp$0, tmp$1;
+    if (!ignoreCase && strings.size === 1) {
+      var string = _.kotlin.single_ir3nkc$(strings);
+      var index = !last ? _.kotlin.indexOf_30chhv$($receiver, string, startIndex) : _.kotlin.lastIndexOf_30chhv$($receiver, string, startIndex);
+      return index < 0 ? null : _.kotlin.to_l1ob02$(index, string);
+    }
+    var indices = !last ? new Kotlin.NumberRange(_.kotlin.coerceAtLeast_rksjo2$(startIndex, 0), _.kotlin.length_gw00vq$($receiver)) : _.kotlin.downTo_rksjo2$(_.kotlin.coerceAtMost_rksjo2$(startIndex, _.kotlin.get_lastIndex_gw00vq$($receiver)), 0);
+    if (typeof $receiver === "string") {
+      tmp$0 = indices.iterator();
+      while (tmp$0.hasNext()) {
+        var index_0 = tmp$0.next();
+        var matchingString;
+        firstOrNull_azvtw4$break: {
+          var tmp$2;
+          tmp$2 = strings.iterator();
+          while (tmp$2.hasNext()) {
+            var element = tmp$2.next();
+            if (_.kotlin.regionMatches_qb0ndp$(element, 0, $receiver, index_0, _.kotlin.length_gw00vq$(element), ignoreCase)) {
+              matchingString = element;
+              break firstOrNull_azvtw4$break;
+            }
+          }
+          matchingString = null;
+        }
+        if (matchingString != null) {
+          return _.kotlin.to_l1ob02$(index_0, matchingString);
+        }
+      }
+    } else {
+      tmp$1 = indices.iterator();
+      while (tmp$1.hasNext()) {
+        var index_1 = tmp$1.next();
+        var matchingString_0;
+        firstOrNull_azvtw4$break_0: {
+          var tmp$3;
+          tmp$3 = strings.iterator();
+          while (tmp$3.hasNext()) {
+            var element_0 = tmp$3.next();
+            if (_.kotlin.regionMatchesImpl(element_0, 0, $receiver, index_1, _.kotlin.length_gw00vq$(element_0), ignoreCase)) {
+              matchingString_0 = element_0;
+              break firstOrNull_azvtw4$break_0;
+            }
+          }
+          matchingString_0 = null;
+        }
+        if (matchingString_0 != null) {
+          return _.kotlin.to_l1ob02$(index_1, matchingString_0);
+        }
+      }
+    }
+    return null;
+  }, findAnyOf_nmdkic$:function($receiver, strings, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, false);
+  }, findLastAnyOf_nmdkic$:function($receiver, strings, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, true);
+  }, indexOfAny_nmdkic$:function($receiver, strings, startIndex, ignoreCase) {
+    var tmp$0, tmp$1;
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+  }, lastIndexOfAny_nmdkic$:function($receiver, strings, startIndex, ignoreCase) {
+    var tmp$0, tmp$1;
+    if (startIndex === void 0) {
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+  }, indexOf_ilfvta$:function($receiver, char, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return ignoreCase || !(typeof $receiver === "string") ? _.kotlin.indexOfAny_cfilrb$($receiver, [char], startIndex, ignoreCase) : $receiver.indexOf(char.toString(), startIndex);
+  }, indexOf_30chhv$:function($receiver, string, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return ignoreCase || !(typeof $receiver === "string") ? _.kotlin.indexOf_1($receiver, string, startIndex, _.kotlin.length_gw00vq$($receiver), ignoreCase) : $receiver.indexOf(string, startIndex);
+  }, lastIndexOf_ilfvta$:function($receiver, char, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return ignoreCase || !(typeof $receiver === "string") ? _.kotlin.lastIndexOfAny_cfilrb$($receiver, [char], startIndex, ignoreCase) : $receiver.lastIndexOf(char.toString(), startIndex);
+  }, lastIndexOf_30chhv$:function($receiver, string, startIndex, ignoreCase) {
+    if (startIndex === void 0) {
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return ignoreCase || !(typeof $receiver === "string") ? _.kotlin.indexOf_1($receiver, string, startIndex, 0, ignoreCase, true) : $receiver.lastIndexOf(string, startIndex);
+  }, contains_kzp0od$:function($receiver, other, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return typeof other === "string" ? _.kotlin.indexOf_30chhv$($receiver, other, void 0, ignoreCase) >= 0 : _.kotlin.indexOf_1($receiver, other, 0, _.kotlin.length_gw00vq$($receiver), ignoreCase) >= 0;
+  }, contains_cjsvxq$:function($receiver, char, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return _.kotlin.indexOf_ilfvta$($receiver, char, void 0, ignoreCase) >= 0;
+  }, contains_pg0hzr$:function($receiver, regex) {
+    return regex.containsMatchIn_6bul2c$($receiver);
+  }, DelimitedRangesSequence:Kotlin.createClass(function() {
+    return[_.kotlin.Sequence];
+  }, function(input, startIndex, limit, getNextMatch) {
+    this.input_hu3uu9$ = input;
+    this.startIndex_j6z5id$ = startIndex;
+    this.limit_hsjqi8$ = limit;
+    this.getNextMatch_ckpp0n$ = getNextMatch;
+  }, {iterator:function() {
+    return _.kotlin.DelimitedRangesSequence.iterator$f(this);
+  }}, {iterator$f:function(this$DelimitedRangesSequence) {
+    return Kotlin.createObject(function() {
+      return[Kotlin.modules["builtins"].kotlin.Iterator];
+    }, function() {
+      this.nextState = -1;
+      this.currentStartIndex = Math.min(Math.max(this$DelimitedRangesSequence.startIndex_j6z5id$, 0), _.kotlin.length_gw00vq$(this$DelimitedRangesSequence.input_hu3uu9$));
+      this.nextSearchIndex = this.currentStartIndex;
+      this.nextItem = null;
+      this.counter = 0;
+    }, {calcNext:function() {
+      if (this.nextSearchIndex < 0) {
+        this.nextState = 0;
+        this.nextItem = null;
+      } else {
+        if (this$DelimitedRangesSequence.limit_hsjqi8$ > 0 && ++this.counter >= this$DelimitedRangesSequence.limit_hsjqi8$ || this.nextSearchIndex > _.kotlin.length_gw00vq$(this$DelimitedRangesSequence.input_hu3uu9$)) {
+          this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, _.kotlin.get_lastIndex_gw00vq$(this$DelimitedRangesSequence.input_hu3uu9$));
+          this.nextSearchIndex = -1;
+        } else {
+          var match = this$DelimitedRangesSequence.getNextMatch_ckpp0n$.call(this$DelimitedRangesSequence.input_hu3uu9$, this.nextSearchIndex);
+          if (match == null) {
+            this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, _.kotlin.get_lastIndex_gw00vq$(this$DelimitedRangesSequence.input_hu3uu9$));
+            this.nextSearchIndex = -1;
+          } else {
+            var tmp$0 = match, index = tmp$0.component1(), length = tmp$0.component2();
+            this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, index - 1);
+            this.currentStartIndex = index + length;
+            this.nextSearchIndex = this.currentStartIndex + (length === 0 ? 1 : 0);
+          }
+        }
+        this.nextState = 1;
+      }
+    }, next:function() {
+      var tmp$0;
+      if (this.nextState === -1) {
+        this.calcNext();
+      }
+      if (this.nextState === 0) {
+        throw new Kotlin.NoSuchElementException;
+      }
+      var result = (tmp$0 = this.nextItem) != null ? tmp$0 : Kotlin.throwNPE();
+      this.nextItem = null;
+      this.nextState = -1;
+      return result;
+    }, hasNext:function() {
+      if (this.nextState === -1) {
+        this.calcNext();
+      }
+      return this.nextState === 1;
+    }});
+  }}), f_10:function(it) {
+    return _.kotlin.to_l1ob02$(it.first, 1);
+  }, rangesDelimitedBy_1$f_0:function(delimiters, ignoreCase) {
+    return function(startIndex) {
+      var tmp$0;
+      return(tmp$0 = _.kotlin.findAnyOf(this, delimiters, startIndex, ignoreCase, false)) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_10) : null;
+    };
+  }, rangesDelimitedBy_1:function($receiver, delimiters, startIndex, ignoreCase, limit) {
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    var value = limit >= 0;
+    if (!value) {
+      var message = "Limit must be non-negative, but was " + limit;
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    return new _.kotlin.DelimitedRangesSequence($receiver, startIndex, limit, _.kotlin.rangesDelimitedBy_1$f_0(delimiters, ignoreCase));
+  }, f_11:function(it) {
+    return _.kotlin.to_l1ob02$(it.first, _.kotlin.length_gw00vq$(it.second));
+  }, rangesDelimitedBy$f_0:function(delimitersList, ignoreCase) {
+    return function(startIndex) {
+      var tmp$0;
+      return(tmp$0 = _.kotlin.findAnyOf_1(this, delimitersList, startIndex, ignoreCase, false)) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_11) : null;
+    };
+  }, rangesDelimitedBy:function($receiver, delimiters, startIndex, ignoreCase, limit) {
+    if (startIndex === void 0) {
+      startIndex = 0;
+    }
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    var value = limit >= 0;
+    if (!value) {
+      var message = "Limit must be non-negative, but was " + limit;
+      throw new Kotlin.IllegalArgumentException(message.toString());
+    }
+    var delimitersList = _.kotlin.asList_eg9ybj$(delimiters);
+    return new _.kotlin.DelimitedRangesSequence($receiver, startIndex, limit, _.kotlin.rangesDelimitedBy$f_0(delimitersList, ignoreCase));
+  }, splitToSequence_l2gz7$f:function(this$splitToSequence) {
+    return function(it) {
+      return _.kotlin.substring_xb7ld$(this$splitToSequence, it);
+    };
+  }, splitToSequence_l2gz7$:function($receiver, delimiters, ignoreCase, limit) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    return _.kotlin.map_hg3um1$(_.kotlin.rangesDelimitedBy($receiver, delimiters, void 0, ignoreCase, limit), _.kotlin.splitToSequence_l2gz7$f($receiver));
+  }, split_l2gz7$:function($receiver, delimiters, ignoreCase, limit) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    var $receiver_0 = _.kotlin.asIterable_dzwiqr$(_.kotlin.rangesDelimitedBy($receiver, delimiters, void 0, ignoreCase, limit));
+    var destination = new Kotlin.ArrayList(_.kotlin.collectionSizeOrDefault_pjxt3m$($receiver_0, 10));
+    var tmp$0;
+    tmp$0 = $receiver_0.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(_.kotlin.substring_xb7ld$($receiver, item));
+    }
+    return destination;
+  }, splitToSequence_rhc0qh$f:function(this$splitToSequence) {
+    return function(it) {
+      return _.kotlin.substring_xb7ld$(this$splitToSequence, it);
+    };
+  }, splitToSequence_rhc0qh$:function($receiver, delimiters, ignoreCase, limit) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    return _.kotlin.map_hg3um1$(_.kotlin.rangesDelimitedBy_1($receiver, delimiters, void 0, ignoreCase, limit), _.kotlin.splitToSequence_rhc0qh$f($receiver));
+  }, split_rhc0qh$:function($receiver, delimiters, ignoreCase, limit) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    if (limit === void 0) {
+      limit = 0;
+    }
+    var $receiver_0 = _.kotlin.asIterable_dzwiqr$(_.kotlin.rangesDelimitedBy_1($receiver, delimiters, void 0, ignoreCase, limit));
+    var destination = new Kotlin.ArrayList(_.kotlin.collectionSizeOrDefault_pjxt3m$($receiver_0, 10));
+    var tmp$0;
+    tmp$0 = $receiver_0.iterator();
+    while (tmp$0.hasNext()) {
+      var item = tmp$0.next();
+      destination.add_za3rmp$(_.kotlin.substring_xb7ld$($receiver, item));
+    }
+    return destination;
+  }, split_nhz2th$:function($receiver, pattern, limit) {
+    if (limit === void 0) {
+      limit = 0;
+    }
+    return pattern.split_905azu$($receiver, limit);
+  }, lineSequence_gw00vq$:function($receiver) {
+    return _.kotlin.splitToSequence_l2gz7$($receiver, ["\r\n", "\n", "\r"]);
+  }, lines_gw00vq$:function($receiver) {
+    return _.kotlin.toList_dzwiqr$(_.kotlin.lineSequence_gw00vq$($receiver));
+  }, isNotEmpty_gw00vq$_0:function($receiver) {
+    return $receiver != null && _.kotlin.length_gw00vq$($receiver) > 0;
+  }, isNotEmpty_pdl1w0$:function($receiver) {
+    return $receiver != null && _.kotlin.length_gw00vq$($receiver) > 0;
+  }, isNullOrEmpty_pdl1w0$:function($receiver) {
+    return $receiver == null || _.kotlin.length_gw00vq$($receiver) === 0;
+  }, isEmpty_pdl1w0$:function($receiver) {
+    return _.kotlin.length_gw00vq$($receiver) === 0;
+  }, isNotEmpty_pdl1w0$_0:function($receiver) {
+    return _.kotlin.length_gw00vq$($receiver) > 0;
+  }, isNotBlank_pdl1w0$:function($receiver) {
+    return!_.kotlin.isBlank_gw00vq$($receiver);
+  }, isNullOrBlank_pdl1w0$:function($receiver) {
+    return $receiver == null || _.kotlin.isBlank_gw00vq$($receiver);
+  }, get_indices_pdl1w0$:{value:function($receiver) {
+    return new Kotlin.NumberRange(0, _.kotlin.length_gw00vq$($receiver) - 1);
+  }}, get_lastIndex_pdl1w0$:{value:function($receiver) {
+    return _.kotlin.length_gw00vq$($receiver) - 1;
+  }}, replaceRange_d9884y$:function($receiver, firstIndex, lastIndex, replacement) {
+    return _.kotlin.replaceRange_tb247g$($receiver, firstIndex, lastIndex, replacement);
+  }, replaceRange_rxpzkz$:function($receiver, range, replacement) {
+    return _.kotlin.replaceRange_tb247g$($receiver, range.start, range.end + 1, replacement);
+  }, removePrefix_94jgcu$:function($receiver, prefix) {
+    return _.kotlin.removePrefix_a14n4c$($receiver, prefix);
+  }, removeSuffix_94jgcu$:function($receiver, suffix) {
+    return _.kotlin.removeSuffix_a14n4c$($receiver, suffix);
+  }, removeSurrounding_ex0kps$:function($receiver, prefix, suffix) {
+    return _.kotlin.removeSurrounding_f5o6fo$($receiver, prefix, suffix);
+  }, removeSurrounding_94jgcu$:function($receiver, delimiter) {
+    return _.kotlin.removeSurrounding_f5o6fo$($receiver, delimiter, delimiter);
+  }, replace_m572s5$:function($receiver, regex, replacement) {
+    return regex.replace_x2uqeu$($receiver, replacement);
+  }, replace_qdwfyd$:function($receiver, regex, transform) {
+    var match = regex.find_905azu$($receiver);
+    if (match == null) {
+      return $receiver.toString();
+    }
+    var lastStart = 0;
+    var length = _.kotlin.length_gw00vq$($receiver);
+    var sb = new Kotlin.StringBuilder;
+    do {
+      var foundMatch = match != null ? match : Kotlin.throwNPE();
+      sb.append($receiver, lastStart, foundMatch.range.start);
+      sb.append(transform(foundMatch));
+      lastStart = foundMatch.range.end + 1;
+      match = foundMatch.next();
+    } while (lastStart < length && match != null);
+    if (lastStart < length) {
+      sb.append($receiver, lastStart, length);
+    }
+    return sb.toString();
+  }, replaceFirst_m572s5$:function($receiver, regex, replacement) {
+    return regex.replaceFirst_x2uqeu$($receiver, replacement);
+  }, matches_124qgt$:function($receiver, regex) {
+    return regex.matches_6bul2c$($receiver);
+  }, startsWith_8o9u7g$:function($receiver, char, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return _.kotlin.length_gw00vq$($receiver) > 0 && _.kotlin.equals_bapbyp$($receiver.charAt(0), char, ignoreCase);
+  }, endsWith_8o9u7g$:function($receiver, char, ignoreCase) {
+    if (ignoreCase === void 0) {
+      ignoreCase = false;
+    }
+    return _.kotlin.length_gw00vq$($receiver) > 0 && _.kotlin.equals_bapbyp$($receiver.charAt(_.kotlin.get_lastIndex_gw00vq$($receiver)), char, ignoreCase);
+  }, findAnyOf_2:function($receiver, chars, startIndex, ignoreCase, last) {
+    var tmp$0;
     if (!ignoreCase && chars.length === 1) {
       var char = _.kotlin.single_355nu0$(chars);
       var index = !last ? $receiver.indexOf(char.toString(), startIndex) : $receiver.lastIndexOf(char.toString(), startIndex);
       return index < 0 ? null : _.kotlin.to_l1ob02$(index, char);
     }
-    var indices = !last ? new Kotlin.NumberRange(Math.max(startIndex, 0), _.kotlin.get_lastIndex_pdl1w0$($receiver)) : _.kotlin.downTo_rksjo2$(Math.min(startIndex, _.kotlin.get_lastIndex_pdl1w0$($receiver)), 0);
+    var indices = !last ? new Kotlin.NumberRange(Math.max(startIndex, 0), _.kotlin.get_lastIndex_gw00vq$($receiver)) : _.kotlin.downTo_rksjo2$(Math.min(startIndex, _.kotlin.get_lastIndex_gw00vq$($receiver)), 0);
     tmp$0 = indices.iterator();
     while (tmp$0.hasNext()) {
       var index_0 = tmp$0.next();
@@ -18511,24 +20697,24 @@
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf($receiver, chars, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_2($receiver, chars, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
   }, lastIndexOfAny_6js5mp$:function($receiver, chars, startIndex, ignoreCase) {
     var tmp$0, tmp$1;
     if (startIndex === void 0) {
-      startIndex = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
     }
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf($receiver, chars, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
-  }, findAnyOf_1:function($receiver, strings, startIndex, ignoreCase, last) {
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_2($receiver, chars, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+  }, findAnyOf_3:function($receiver, strings, startIndex, ignoreCase, last) {
     var tmp$0;
     if (!ignoreCase && strings.size === 1) {
       var string = _.kotlin.single_ir3nkc$(strings);
       var index = !last ? $receiver.indexOf(string, startIndex) : $receiver.lastIndexOf(string, startIndex);
       return index < 0 ? null : _.kotlin.to_l1ob02$(index, string);
     }
-    var indices = !last ? new Kotlin.NumberRange(Math.max(startIndex, 0), _.kotlin.length_gw00vq$($receiver)) : _.kotlin.downTo_rksjo2$(Math.min(startIndex, _.kotlin.get_lastIndex_pdl1w0$($receiver)), 0);
+    var indices = !last ? new Kotlin.NumberRange(Math.max(startIndex, 0), _.kotlin.length_gw00vq$($receiver)) : _.kotlin.downTo_rksjo2$(Math.min(startIndex, _.kotlin.get_lastIndex_gw00vq$($receiver)), 0);
     tmp$0 = indices.iterator();
     while (tmp$0.hasNext()) {
       var index_0 = tmp$0.next();
@@ -18538,7 +20724,7 @@
         tmp$1 = strings.iterator();
         while (tmp$1.hasNext()) {
           var element = tmp$1.next();
-          if (_.kotlin.regionMatches_v7eu1p$(element, 0, $receiver, index_0, _.kotlin.length_gw00vq$(element), ignoreCase)) {
+          if (_.kotlin.regionMatches_qb0ndp$(element, 0, $receiver, index_0, _.kotlin.length_gw00vq$(element), ignoreCase)) {
             matchingString = element;
             break firstOrNull_azvtw4$break;
           }
@@ -18557,15 +20743,15 @@
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, false);
+    return _.kotlin.findAnyOf_3($receiver, strings, startIndex, ignoreCase, false);
   }, findLastAnyOf_n77tx6$:function($receiver, strings, startIndex, ignoreCase) {
     if (startIndex === void 0) {
-      startIndex = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
     }
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, true);
+    return _.kotlin.findAnyOf_3($receiver, strings, startIndex, ignoreCase, true);
   }, indexOfAny_n77tx6$:function($receiver, strings, startIndex, ignoreCase) {
     var tmp$0, tmp$1;
     if (startIndex === void 0) {
@@ -18574,16 +20760,16 @@
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_3($receiver, strings, startIndex, ignoreCase, false)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
   }, lastIndexOfAny_n77tx6$:function($receiver, strings, startIndex, ignoreCase) {
     var tmp$0, tmp$1;
     if (startIndex === void 0) {
-      startIndex = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
     }
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_1($receiver, strings, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
+    return(tmp$1 = (tmp$0 = _.kotlin.findAnyOf_3($receiver, strings, startIndex, ignoreCase, true)) != null ? tmp$0.first : null) != null ? tmp$1 : -1;
   }, indexOf_p76d2s$:function($receiver, char, startIndex, ignoreCase) {
     if (startIndex === void 0) {
       startIndex = 0;
@@ -18591,7 +20777,7 @@
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return ignoreCase ? _.kotlin.indexOfAny_6js5mp$($receiver, [char], startIndex, ignoreCase) : $receiver.indexOf(char.toString(), startIndex);
+    return ignoreCase ? _.kotlin.indexOfAny_cfilrb$($receiver, [char], startIndex, ignoreCase) : $receiver.indexOf(char.toString(), startIndex);
   }, indexOf_rh6gah$:function($receiver, string, startIndex, ignoreCase) {
     if (startIndex === void 0) {
       startIndex = 0;
@@ -18599,144 +20785,33 @@
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return ignoreCase ? _.kotlin.indexOfAny_n77tx6$($receiver, _.kotlin.listOf_za3rmp$(string), startIndex, ignoreCase) : $receiver.indexOf(string, startIndex);
+    return ignoreCase ? _.kotlin.indexOfAny_nmdkic$($receiver, _.kotlin.listOf_za3rmp$(string), startIndex, ignoreCase) : $receiver.indexOf(string, startIndex);
   }, lastIndexOf_p76d2s$:function($receiver, char, startIndex, ignoreCase) {
     if (startIndex === void 0) {
-      startIndex = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
     }
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return ignoreCase ? _.kotlin.lastIndexOfAny_6js5mp$($receiver, [char], startIndex, ignoreCase) : $receiver.lastIndexOf(char.toString(), startIndex);
+    return ignoreCase ? _.kotlin.lastIndexOfAny_cfilrb$($receiver, [char], startIndex, ignoreCase) : $receiver.lastIndexOf(char.toString(), startIndex);
   }, lastIndexOf_rh6gah$:function($receiver, string, startIndex, ignoreCase) {
     if (startIndex === void 0) {
-      startIndex = _.kotlin.get_lastIndex_pdl1w0$($receiver);
+      startIndex = _.kotlin.get_lastIndex_gw00vq$($receiver);
     }
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return ignoreCase ? _.kotlin.lastIndexOfAny_n77tx6$($receiver, _.kotlin.listOf_za3rmp$(string), startIndex, ignoreCase) : $receiver.lastIndexOf(string, startIndex);
+    return ignoreCase ? _.kotlin.lastIndexOfAny_nmdkic$($receiver, _.kotlin.listOf_za3rmp$(string), startIndex, ignoreCase) : $receiver.lastIndexOf(string, startIndex);
   }, contains_gnw9n7$:function($receiver, seq, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return _.kotlin.indexOf_rh6gah$($receiver, seq.toString(), void 0, ignoreCase) >= 0;
+    return _.kotlin.indexOf_30chhv$($receiver, seq.toString(), void 0, ignoreCase) >= 0;
   }, contains_8o9u7g$:function($receiver, char, ignoreCase) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
     }
-    return _.kotlin.indexOf_p76d2s$($receiver, char, void 0, ignoreCase) >= 0;
-  }, contains_pg0hzr$:function($receiver, regex) {
-    return regex.containsMatchIn_6bul2c$($receiver);
-  }, DelimitedRangesSequence:Kotlin.createClass(function() {
-    return[_.kotlin.Sequence];
-  }, function(string, startIndex, limit, getNextMatch) {
-    this.string_k5cw9o$ = string;
-    this.startIndex_j6z5id$ = startIndex;
-    this.limit_hsjqi8$ = limit;
-    this.getNextMatch_ckpp0n$ = getNextMatch;
-  }, {iterator:function() {
-    return _.kotlin.DelimitedRangesSequence.iterator$f(this);
-  }}, {iterator$f:function(this$DelimitedRangesSequence) {
-    return Kotlin.createObject(function() {
-      return[Kotlin.modules["builtins"].kotlin.Iterator];
-    }, function() {
-      this.nextState = -1;
-      this.currentStartIndex = Math.min(Math.max(this$DelimitedRangesSequence.startIndex_j6z5id$, 0), _.kotlin.length_gw00vq$(this$DelimitedRangesSequence.string_k5cw9o$));
-      this.nextSearchIndex = this.currentStartIndex;
-      this.nextItem = null;
-      this.counter = 0;
-    }, {calcNext:function() {
-      if (this.nextSearchIndex < 0) {
-        this.nextState = 0;
-        this.nextItem = null;
-      } else {
-        if (this$DelimitedRangesSequence.limit_hsjqi8$ > 0 && ++this.counter >= this$DelimitedRangesSequence.limit_hsjqi8$ || this.nextSearchIndex > _.kotlin.length_gw00vq$(this$DelimitedRangesSequence.string_k5cw9o$)) {
-          this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, _.kotlin.get_lastIndex_pdl1w0$(this$DelimitedRangesSequence.string_k5cw9o$));
-          this.nextSearchIndex = -1;
-        } else {
-          var match = this$DelimitedRangesSequence.getNextMatch_ckpp0n$.call(this$DelimitedRangesSequence.string_k5cw9o$, this.nextSearchIndex);
-          if (match == null) {
-            this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, _.kotlin.get_lastIndex_pdl1w0$(this$DelimitedRangesSequence.string_k5cw9o$));
-            this.nextSearchIndex = -1;
-          } else {
-            var tmp$0 = match, index = tmp$0.component1(), length = tmp$0.component2();
-            this.nextItem = new Kotlin.NumberRange(this.currentStartIndex, index - 1);
-            this.currentStartIndex = index + length;
-            this.nextSearchIndex = this.currentStartIndex + (length === 0 ? 1 : 0);
-          }
-        }
-        this.nextState = 1;
-      }
-    }, next:function() {
-      var tmp$0;
-      if (this.nextState === -1) {
-        this.calcNext();
-      }
-      if (this.nextState === 0) {
-        throw new Kotlin.NoSuchElementException;
-      }
-      var result = (tmp$0 = this.nextItem) != null ? tmp$0 : Kotlin.throwNPE();
-      this.nextItem = null;
-      this.nextState = -1;
-      return result;
-    }, hasNext:function() {
-      if (this.nextState === -1) {
-        this.calcNext();
-      }
-      return this.nextState === 1;
-    }});
-  }}), f_2:function(it) {
-    return _.kotlin.to_l1ob02$(it.first, 1);
-  }, rangesDelimitedBy_1$f_0:function(delimiters, ignoreCase) {
-    return function(startIndex) {
-      var tmp$0;
-      return(tmp$0 = _.kotlin.findAnyOf(this, delimiters, startIndex, ignoreCase, false)) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_2) : null;
-    };
-  }, rangesDelimitedBy_1:function($receiver, delimiters, startIndex, ignoreCase, limit) {
-    if (startIndex === void 0) {
-      startIndex = 0;
-    }
-    if (ignoreCase === void 0) {
-      ignoreCase = false;
-    }
-    if (limit === void 0) {
-      limit = 0;
-    }
-    var value = limit >= 0;
-    if (!value) {
-      var message = "Limit must be non-negative, but was " + limit;
-      throw new Kotlin.IllegalArgumentException(message.toString());
-    }
-    return new _.kotlin.DelimitedRangesSequence($receiver, startIndex, limit, _.kotlin.rangesDelimitedBy_1$f_0(delimiters, ignoreCase));
-  }, f_3:function(it) {
-    return _.kotlin.to_l1ob02$(it.first, _.kotlin.length_gw00vq$(it.second));
-  }, rangesDelimitedBy$f_0:function(delimitersList, ignoreCase) {
-    return function(startIndex) {
-      var tmp$0;
-      return(tmp$0 = _.kotlin.findAnyOf_1(this, delimitersList, startIndex, ignoreCase, false)) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_3) : null;
-    };
-  }, rangesDelimitedBy:function($receiver, delimiters, startIndex, ignoreCase, limit) {
-    if (startIndex === void 0) {
-      startIndex = 0;
-    }
-    if (ignoreCase === void 0) {
-      ignoreCase = false;
-    }
-    if (limit === void 0) {
-      limit = 0;
-    }
-    var value = limit >= 0;
-    if (!value) {
-      var message = "Limit must be non-negative, but was " + limit;
-      throw new Kotlin.IllegalArgumentException(message.toString());
-    }
-    var delimitersList = _.kotlin.asList_eg9ybj$(delimiters);
-    return new _.kotlin.DelimitedRangesSequence($receiver, startIndex, limit, _.kotlin.rangesDelimitedBy$f_0(delimitersList, ignoreCase));
-  }, splitToSequence_6nia1l$f:function(this$splitToSequence) {
-    return function(it) {
-      return _.kotlin.substring_cumll7$(this$splitToSequence, it);
-    };
+    return _.kotlin.indexOf_ilfvta$($receiver, char, void 0, ignoreCase) >= 0;
   }, splitToSequence_6nia1l$:function($receiver, delimiters, ignoreCase, limit) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -18744,7 +20819,7 @@
     if (limit === void 0) {
       limit = 0;
     }
-    return _.kotlin.map_hg3um1$(_.kotlin.rangesDelimitedBy($receiver, delimiters, void 0, ignoreCase, limit), _.kotlin.splitToSequence_6nia1l$f($receiver));
+    return _.kotlin.splitToSequence_l2gz7$($receiver, delimiters, ignoreCase, limit);
   }, split_6nia1l$:function($receiver, delimiters, ignoreCase, limit) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -18752,11 +20827,7 @@
     if (limit === void 0) {
       limit = 0;
     }
-    return _.kotlin.toList_dzwiqr$(_.kotlin.splitToSequence_6nia1l$($receiver, delimiters, ignoreCase, limit));
-  }, splitToSequence_lllklv$f:function(this$splitToSequence) {
-    return function(it) {
-      return _.kotlin.substring_cumll7$(this$splitToSequence, it);
-    };
+    return _.kotlin.toList_dzwiqr$(_.kotlin.splitToSequence_l2gz7$($receiver, delimiters, ignoreCase, limit));
   }, splitToSequence_lllklv$:function($receiver, delimiters, ignoreCase, limit) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -18764,7 +20835,7 @@
     if (limit === void 0) {
       limit = 0;
     }
-    return _.kotlin.map_hg3um1$(_.kotlin.rangesDelimitedBy_1($receiver, delimiters, void 0, ignoreCase, limit), _.kotlin.splitToSequence_lllklv$f($receiver));
+    return _.kotlin.splitToSequence_rhc0qh$($receiver, delimiters, ignoreCase, limit);
   }, split_lllklv$:function($receiver, delimiters, ignoreCase, limit) {
     if (ignoreCase === void 0) {
       ignoreCase = false;
@@ -18772,23 +20843,23 @@
     if (limit === void 0) {
       limit = 0;
     }
-    return _.kotlin.toList_dzwiqr$(_.kotlin.splitToSequence_lllklv$($receiver, delimiters, ignoreCase, limit));
+    return _.kotlin.toList_dzwiqr$(_.kotlin.splitToSequence_rhc0qh$($receiver, delimiters, ignoreCase, limit));
   }, split_csixt7$:function($receiver, pattern, limit) {
     if (limit === void 0) {
       limit = 0;
     }
     return pattern.split_905azu$($receiver, limit);
   }, lineSequence_pdl1w0$:function($receiver) {
-    return _.kotlin.splitToSequence_6nia1l$($receiver, ["\r\n", "\n", "\r"]);
+    return _.kotlin.lineSequence_gw00vq$($receiver);
   }, lines_pdl1w0$:function($receiver) {
-    return _.kotlin.toList_dzwiqr$(_.kotlin.lineSequence_pdl1w0$($receiver));
+    return _.kotlin.toList_dzwiqr$(_.kotlin.lineSequence_gw00vq$($receiver));
   }, toRegex_pdl1w0$:function($receiver) {
     return _.kotlin.text.Regex_61zpoe$($receiver);
   }, toRegex_1fh9rc$:function($receiver, option) {
     return _.kotlin.text.Regex_sb3q2$($receiver, option);
   }, toRegex_uo44mr$:function($receiver, options) {
     return new _.kotlin.text.Regex($receiver, options);
-  }, f_4:function(this$toGenerator, nextValue) {
+  }, f_12:function(this$toGenerator, nextValue) {
     return function(result) {
       nextValue.v = this$toGenerator(result);
       return result;
@@ -18796,7 +20867,7 @@
   }, toGenerator_kk67m7$f:function(nextValue, this$toGenerator) {
     return function() {
       var tmp$0;
-      return(tmp$0 = nextValue.v) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_4(this$toGenerator, nextValue)) : null;
+      return(tmp$0 = nextValue.v) != null ? _.kotlin.let_7hr6ff$(tmp$0, _.kotlin.f_12(this$toGenerator, nextValue)) : null;
     };
   }, toGenerator_kk67m7$:function($receiver, initialValue) {
     var nextValue = {v:initialValue};
@@ -18908,8 +20979,6 @@
     return Kotlin.numberToDouble($receiver);
   }, floatValue_rcaex4$:function($receiver) {
     return Kotlin.numberToDouble($receiver);
-  }, compareValuesByNullable_hhbmn6$:function(a, b, selectors) {
-    return _.kotlin.compareValuesBy_hhbmn6$(a, b, selectors);
   }, compareValuesBy_hhbmn6$:function(a, b, selectors) {
     var tmp$0, tmp$1, tmp$2;
     _.kotlin.require_6taknv$(selectors.length > 0);
@@ -19040,20 +21109,7 @@
       return comparator.compare(a, b);
     }});
   }, nullsFirst:function() {
-    return Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      if (a === b) {
-        return 0;
-      }
-      if (a == null) {
-        return-1;
-      }
-      if (b == null) {
-        return 1;
-      }
-      return Kotlin.compareTo(a, b);
-    }});
+    return _.kotlin.nullsFirst_9wwew7$(_.kotlin.naturalOrder());
   }, nullsLast_9wwew7$:function(comparator) {
     return Kotlin.createObject(function() {
       return[Kotlin.Comparator];
@@ -19070,25 +21126,24 @@
       return comparator.compare(a, b);
     }});
   }, nullsLast:function() {
-    return Kotlin.createObject(function() {
-      return[Kotlin.Comparator];
-    }, null, {compare:function(a, b) {
-      if (a === b) {
-        return 0;
-      }
-      if (a == null) {
-        return 1;
-      }
-      if (b == null) {
-        return-1;
-      }
-      return Kotlin.compareTo(a, b);
-    }});
+    return _.kotlin.nullsLast_9wwew7$(_.kotlin.naturalOrder());
+  }, naturalOrder:function() {
+    return _.kotlin.NaturalOrderComparator;
+  }, reverseOrder:function() {
+    return _.kotlin.ReverseOrderComparator;
   }, reversed_n7glsb$:function($receiver) {
     if (Kotlin.isType($receiver, _.kotlin.ReversedComparator)) {
       return $receiver.comparator;
     } else {
-      return new _.kotlin.ReversedComparator($receiver);
+      if ($receiver === _.kotlin.NaturalOrderComparator) {
+        return _.kotlin.ReverseOrderComparator;
+      } else {
+        if ($receiver === _.kotlin.ReverseOrderComparator) {
+          return _.kotlin.NaturalOrderComparator;
+        } else {
+          return new _.kotlin.ReversedComparator($receiver);
+        }
+      }
     }
   }, ReversedComparator:Kotlin.createClass(function() {
     return[Kotlin.Comparator];
@@ -19096,6 +21151,8 @@
     this.comparator = comparator;
   }, {compare:function(a, b) {
     return this.comparator.compare(b, a);
+  }, reversed:function() {
+    return this.comparator;
   }}), require_6taknv$:function(value) {
     if (!value) {
       var message = "Failed requirement";
@@ -19179,22 +21236,20 @@
   }), error_za3rmp$:function(message) {
     throw new Kotlin.IllegalStateException(message.toString());
   }, ComparableRange:Kotlin.createClass(function() {
-    return[Kotlin.modules["builtins"].kotlin.Range];
-  }, function(start, end) {
+    return[Kotlin.modules["builtins"].kotlin.ClosedRange];
+  }, function(start, endInclusive) {
     this.$start_2bvaja$ = start;
-    this.$end_m3ictf$ = end;
+    this.$endInclusive_4nxqrt$ = endInclusive;
   }, {start:{get:function() {
     return this.$start_2bvaja$;
-  }}, end:{get:function() {
-    return this.$end_m3ictf$;
-  }}, contains_htax2k$:function(item) {
-    return Kotlin.compareTo(this.start, item) <= 0 && Kotlin.compareTo(item, this.end) <= 0;
-  }, equals_za3rmp$:function(other) {
-    return Kotlin.isType(other, _.kotlin.ComparableRange) && (this.isEmpty() && other.isEmpty() || Kotlin.equals(this.start, other.start) && Kotlin.equals(this.end, other.end));
+  }}, endInclusive:{get:function() {
+    return this.$endInclusive_4nxqrt$;
+  }}, equals_za3rmp$:function(other) {
+    return Kotlin.isType(other, _.kotlin.ComparableRange) && (this.isEmpty() && other.isEmpty() || Kotlin.equals(this.start, other.start) && Kotlin.equals(this.endInclusive, other.endInclusive));
   }, hashCode:function() {
-    return this.isEmpty() ? -1 : 31 * Kotlin.hashCode(this.start) + Kotlin.hashCode(this.end);
+    return this.isEmpty() ? -1 : 31 * Kotlin.hashCode(this.start) + Kotlin.hashCode(this.endInclusive);
   }, toString:function() {
-    return this.start + ".." + this.end;
+    return this.start + ".." + this.endInclusive;
   }}), rangeTo_n1zt5e$:function($receiver, that) {
     return new _.kotlin.ComparableRange($receiver, that);
   }, checkStepIsPositive:function(isPositive, step) {
@@ -19304,7 +21359,7 @@
       var item = tmp$0.next();
       destination.add_za3rmp$(item.value);
     }
-    this.nativePattern_ug9tz2$ = new RegExp(pattern, _.kotlin.joinToString_aw7tsx$(destination, "") + "g");
+    this.nativePattern_ug9tz2$ = new RegExp(pattern, _.kotlin.joinToString_sdec0h$(destination, "") + "g");
   }, {matches_6bul2c$:function(input) {
     _.kotlin.text.js.reset_bckwes$(this.nativePattern_ug9tz2$);
     var match = this.nativePattern_ug9tz2$.exec(input.toString());
@@ -19335,15 +21390,15 @@
     }
     return this.findAll_905azu$(input, startIndex);
   }, matchEntire_6bul2c$:function(input) {
-    if (_.kotlin.startsWith_8o9u7g$(this.pattern, "^") && _.kotlin.endsWith_8o9u7g$(this.pattern, "$")) {
+    if (_.kotlin.startsWith_cjsvxq$(this.pattern, "^") && _.kotlin.endsWith_cjsvxq$(this.pattern, "$")) {
       return this.find_905azu$(input);
     } else {
       return(new _.kotlin.text.Regex("^" + _.kotlin.trimEnd_1hgcu2$(_.kotlin.trimStart_1hgcu2$(this.pattern, ["^"]), ["$"]) + "$", this.options)).find_905azu$(input);
     }
   }, replace_x2uqeu$:function(input, replacement) {
     return input.toString().replace(this.nativePattern_ug9tz2$, replacement);
-  }, replace_clxut6$:Kotlin.defineInlineFunction("stdlib.kotlin.text.Regex.replace_clxut6$", function(input, transform) {
-    var match = this.match_905azu$(input);
+  }, replace_ftxfdg$:Kotlin.defineInlineFunction("stdlib.kotlin.text.Regex.replace_ftxfdg$", function(input, transform) {
+    var match = this.find_905azu$(input);
     if (match == null) {
       return input.toString();
     }
@@ -19370,7 +21425,7 @@
       var item = tmp$0.next();
       destination.add_za3rmp$(item.value);
     }
-    var nonGlobalOptions = _.kotlin.joinToString_aw7tsx$(destination, "");
+    var nonGlobalOptions = _.kotlin.joinToString_sdec0h$(destination, "");
     return input.toString().replace(new RegExp(this.pattern, nonGlobalOptions), replacement);
   }, split_905azu$:function(input, limit) {
     var tmp$0;
@@ -19382,7 +21437,7 @@
       var message = "Limit must be non-negative, but was " + limit;
       throw new Kotlin.IllegalArgumentException(message.toString());
     }
-    var $receiver = this.matchAll_905azu$(input);
+    var $receiver = this.findAll_905azu$(input);
     var matches = limit === 0 ? $receiver : _.kotlin.take_yqb2rl$($receiver, limit - 1);
     var result = new Kotlin.ArrayList;
     var lastStart = 0;
@@ -19490,174 +21545,30 @@
     return[Kotlin.modules["builtins"].kotlin.Collection];
   }), MatchResult:Kotlin.createTrait(null), js:Kotlin.definePackage(null, {reset_bckwes$:function($receiver) {
     $receiver.lastIndex = 0;
-  }})}), dom:Kotlin.definePackage(null, {createDocument:function() {
-    return new Document;
-  }, toXmlString_asww5t$:function($receiver) {
-    return $receiver.outerHTML;
-  }, toXmlString_rq0l4m$:function($receiver, xmlDeclaration) {
-    return $receiver.outerHTML;
-  }, get_text_asww5t$:{value:function($receiver) {
-    var tmp$0;
-    return(tmp$0 = $receiver.textContent) != null ? tmp$0 : "";
-  }}, set_text_asww5t$:{value:function($receiver, value) {
-    $receiver.textContent = value;
-  }}, get_childrenText_ejp6nl$:{value:function($receiver) {
-    var buffer = new Kotlin.StringBuilder;
-    var nodeList = $receiver.childNodes;
-    var i = 0;
-    var size = nodeList.length;
-    while (i < size) {
-      var node = nodeList.item(i);
-      if (node != null) {
-        if (_.kotlin.dom.get_isText_asww5t$(node)) {
-          buffer.append(node.nodeValue);
-        }
-      }
-      i++;
+  }})}), dom:Kotlin.definePackage(null, {build:Kotlin.definePackage(null, {createElement_juqb3g$:function($receiver, name, init) {
+    var elem = $receiver.createElement(name);
+    init.call(elem);
+    return elem;
+  }, createElement_hart3b$:function($receiver, name, doc, init) {
+    if (doc === void 0) {
+      doc = null;
     }
-    return buffer.toString();
-  }}, set_childrenText_ejp6nl$:{value:function($receiver, value) {
-    var tmp$0;
-    var element = $receiver;
-    tmp$0 = _.kotlin.dom.children_ejp6nl$(element).iterator();
-    while (tmp$0.hasNext()) {
-      var node = tmp$0.next();
-      if (_.kotlin.dom.get_isText_asww5t$(node)) {
-        $receiver.removeChild(node);
-      }
+    var elem = _.kotlin.dom.ownerDocument_pmnl5l$($receiver, doc).createElement(name);
+    init.call(elem);
+    return elem;
+  }, addElement_juqb3g$:function($receiver, name, init) {
+    var child = _.kotlin.dom.build.createElement_juqb3g$($receiver, name, init);
+    $receiver.appendChild(child);
+    return child;
+  }, addElement_hart3b$:function($receiver, name, doc, init) {
+    if (doc === void 0) {
+      doc = null;
     }
-    _.kotlin.dom.addText_esmrqt$(element, value);
-  }}, get_classes_ejp6nl$:{value:function($receiver) {
-    var tmp$0;
-    return(tmp$0 = $receiver.getAttribute("class")) != null ? tmp$0 : "";
-  }}, set_classes_ejp6nl$:{value:function($receiver, value) {
-    $receiver.setAttribute("class", value);
-  }}, hasClass_cjmw3z$:function($receiver, cssClass) {
-    return _.kotlin.matches_124qgt$(_.kotlin.dom.get_classes_ejp6nl$($receiver), _.kotlin.toRegex_pdl1w0$("(^|.*" + "\\" + "s+)" + cssClass + "(" + "$" + "|" + "\\" + "s+.*)"));
-  }, children_ejp6nl$:function($receiver) {
-    return _.kotlin.dom.toList_d3eamn$($receiver != null ? $receiver.childNodes : null);
-  }, childElements_ejp6nl$:function($receiver) {
-    var $receiver_0 = _.kotlin.dom.children_ejp6nl$($receiver);
-    var destination = new Kotlin.ArrayList;
-    var tmp$0;
-    tmp$0 = $receiver_0.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (element.nodeType === Node.ELEMENT_NODE) {
-        destination.add_za3rmp$(element);
-      }
-    }
-    var destination_0 = new Kotlin.ArrayList(_.kotlin.collectionSizeOrDefault_pjxt3m$(destination, 10));
-    var tmp$1;
-    tmp$1 = destination.iterator();
-    while (tmp$1.hasNext()) {
-      var item = tmp$1.next();
-      destination_0.add_za3rmp$(item);
-    }
-    return destination_0;
-  }, childElements_cjmw3z$:function($receiver, name) {
-    var $receiver_0 = _.kotlin.dom.children_ejp6nl$($receiver);
-    var destination = new Kotlin.ArrayList;
-    var tmp$0;
-    tmp$0 = $receiver_0.iterator();
-    while (tmp$0.hasNext()) {
-      var element = tmp$0.next();
-      if (element.nodeType === Node.ELEMENT_NODE && Kotlin.equals(element.nodeName, name)) {
-        destination.add_za3rmp$(element);
-      }
-    }
-    var destination_0 = new Kotlin.ArrayList(_.kotlin.collectionSizeOrDefault_pjxt3m$(destination, 10));
-    var tmp$1;
-    tmp$1 = destination.iterator();
-    while (tmp$1.hasNext()) {
-      var item = tmp$1.next();
-      destination_0.add_za3rmp$(item);
-    }
-    return destination_0;
-  }, get_elements_4wc2mi$:{value:function($receiver) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagName("*") : null);
-  }}, get_elements_ejp6nl$:{value:function($receiver) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagName("*") : null);
-  }}, elements_cjmw3z$:function($receiver, localName) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagName(localName) : null);
-  }, elements_nnvvt4$:function($receiver, localName) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagName(localName) : null);
-  }, elements_achogv$:function($receiver, namespaceUri, localName) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagNameNS(namespaceUri, localName) : null);
-  }, elements_awnjmu$:function($receiver, namespaceUri, localName) {
-    return _.org.w3c.dom.toElementList_sg7yuw$($receiver != null ? $receiver.getElementsByTagNameNS(namespaceUri, localName) : null);
-  }, asList_d3eamn$:function($receiver) {
-    return $receiver == null ? _.kotlin.emptyList() : new _.kotlin.dom.NodeListAsList($receiver);
-  }, toList_d3eamn$:function($receiver) {
-    return _.kotlin.dom.asList_d3eamn$($receiver);
-  }, toElementList_d3eamn$:function($receiver) {
-    var tmp$0;
-    if ($receiver == null) {
-      tmp$0 = new Kotlin.ArrayList;
-    } else {
-      tmp$0 = new _.kotlin.dom.ElementListAsList($receiver);
-    }
-    return tmp$0;
-  }, get_nnvvt4$:function($receiver, selector) {
-    var tmp$0;
-    var root = $receiver != null ? $receiver.documentElement : null;
-    if (root != null) {
-      if (Kotlin.equals(selector, "*")) {
-        tmp$0 = _.kotlin.dom.get_elements_4wc2mi$($receiver);
-      } else {
-        if (_.kotlin.startsWith_41xvrb$(selector, ".")) {
-          var $receiver_0 = _.kotlin.dom.get_elements_4wc2mi$($receiver);
-          var destination = new Kotlin.ArrayList;
-          var tmp$1;
-          tmp$1 = $receiver_0.iterator();
-          while (tmp$1.hasNext()) {
-            var element_0 = tmp$1.next();
-            if (_.kotlin.dom.hasClass_cjmw3z$(element_0, selector.substring(1))) {
-              destination.add_za3rmp$(element_0);
-            }
-          }
-          tmp$0 = _.kotlin.toList_ir3nkc$(destination);
-        } else {
-          if (_.kotlin.startsWith_41xvrb$(selector, "#")) {
-            var id = selector.substring(1);
-            var element = $receiver != null ? $receiver.getElementById(id) : null;
-            return element != null ? _.kotlin.arrayListOf_9mqe4v$([element]) : _.kotlin.emptyList();
-          } else {
-            tmp$0 = _.kotlin.dom.elements_nnvvt4$($receiver, selector);
-          }
-        }
-      }
-    } else {
-      tmp$0 = _.kotlin.emptyList();
-    }
-    return tmp$0;
-  }, get_cjmw3z$:function($receiver, selector) {
-    var tmp$0, tmp$1;
-    if (Kotlin.equals(selector, "*")) {
-      tmp$1 = _.kotlin.dom.get_elements_ejp6nl$($receiver);
-    } else {
-      if (_.kotlin.startsWith_41xvrb$(selector, ".")) {
-        var $receiver_0 = _.kotlin.dom.get_elements_ejp6nl$($receiver);
-        var destination = new Kotlin.ArrayList;
-        var tmp$2;
-        tmp$2 = $receiver_0.iterator();
-        while (tmp$2.hasNext()) {
-          var element_0 = tmp$2.next();
-          if (_.kotlin.dom.hasClass_cjmw3z$(element_0, selector.substring(1))) {
-            destination.add_za3rmp$(element_0);
-          }
-        }
-        tmp$1 = _.kotlin.toList_ir3nkc$(destination);
-      } else {
-        if (_.kotlin.startsWith_41xvrb$(selector, "#")) {
-          var element = (tmp$0 = $receiver.ownerDocument) != null ? tmp$0.getElementById(selector.substring(1)) : null;
-          return element != null ? _.kotlin.arrayListOf_9mqe4v$([element]) : _.kotlin.emptyList();
-        } else {
-          tmp$1 = _.kotlin.dom.elements_cjmw3z$($receiver, selector);
-        }
-      }
-    }
-    return tmp$1;
+    var child = _.kotlin.dom.build.createElement_hart3b$($receiver, name, doc, init);
+    $receiver.appendChild(child);
+    return child;
+  }}), hasClass_cjmw3z$:function($receiver, cssClass) {
+    return _.kotlin.matches_pg0hzr$($receiver.className, _.kotlin.toRegex_pdl1w0$("(^|.*" + "\\" + "s+)" + cssClass + "(" + "$" + "|" + "\\" + "s+.*)"));
   }, addClass_fwdim7$:function($receiver, cssClasses) {
     var destination = new Kotlin.ArrayList;
     var tmp$0, tmp$1, tmp$2;
@@ -19670,14 +21581,14 @@
     }
     var missingClasses = destination;
     if (_.kotlin.isNotEmpty_4m3c68$(missingClasses)) {
-      var presentClasses = _.kotlin.trim_pdl1w0$(_.kotlin.dom.get_classes_ejp6nl$($receiver));
+      var presentClasses = _.kotlin.trim_pdl1w0$($receiver.className);
       var $receiver_0 = new Kotlin.StringBuilder;
       $receiver_0.append(presentClasses);
-      if (!_.kotlin.isEmpty_pdl1w0$(presentClasses)) {
+      if (!_.kotlin.isEmpty_gw00vq$(presentClasses)) {
         $receiver_0.append(" ");
       }
-      _.kotlin.joinTo_3o8ep9$(missingClasses, $receiver_0, " ");
-      _.kotlin.dom.set_classes_ejp6nl$($receiver, $receiver_0.toString());
+      _.kotlin.joinTo_pzhnk5$(missingClasses, $receiver_0, " ");
+      $receiver.className = $receiver_0.toString();
       return true;
     }
     return false;
@@ -19697,7 +21608,7 @@
     }
     if (any_dgtl0h$result) {
       var toBeRemoved = _.kotlin.toSet_eg9ybj$(cssClasses);
-      var $receiver_0 = _.kotlin.split_csixt7$(_.kotlin.trim_pdl1w0$(_.kotlin.dom.get_classes_ejp6nl$($receiver)), _.kotlin.toRegex_pdl1w0$("\\s+"));
+      var $receiver_0 = _.kotlin.split_nhz2th$(_.kotlin.trim_pdl1w0$($receiver.className), _.kotlin.toRegex_pdl1w0$("\\s+"));
       var destination = new Kotlin.ArrayList;
       var tmp$3;
       tmp$3 = $receiver_0.iterator();
@@ -19707,18 +21618,73 @@
           destination.add_za3rmp$(element_0);
         }
       }
-      _.kotlin.dom.set_classes_ejp6nl$($receiver, _.kotlin.joinToString_aw7tsx$(destination, " "));
+      $receiver.className = _.kotlin.joinToString_sdec0h$(destination, " ");
       return true;
     }
     return false;
-  }, clear_asww5t$:function($receiver) {
+  }, children_ejp6nl$:function($receiver) {
+    var tmp$0, tmp$1;
+    return(tmp$1 = (tmp$0 = $receiver != null ? $receiver.childNodes : null) != null ? _.kotlin.dom.asList_d3eamn$(tmp$0) : null) != null ? tmp$1 : _.kotlin.emptyList();
+  }, childElements_ejp6nl$:function($receiver) {
+    var tmp$0, tmp$1;
+    return(tmp$1 = (tmp$0 = $receiver != null ? $receiver.childNodes : null) != null ? _.kotlin.dom.filterElements_d3eamn$(tmp$0) : null) != null ? tmp$1 : _.kotlin.emptyList();
+  }, childElements_cjmw3z$f:function(name) {
+    return function(it) {
+      return Kotlin.equals(it.nodeName, name);
+    };
+  }, childElements_cjmw3z$:function($receiver, name) {
+    var tmp$0, tmp$1, tmp$2;
+    return(tmp$2 = (tmp$1 = (tmp$0 = $receiver != null ? $receiver.childNodes : null) != null ? _.kotlin.dom.filterElements_d3eamn$(tmp$0) : null) != null ? _.kotlin.filter_azvtw4$(tmp$1, _.kotlin.dom.childElements_cjmw3z$f(name)) : null) != null ? tmp$2 : _.kotlin.emptyList();
+  }, get_elements_4wc2mi$:{value:function($receiver) {
+    return _.kotlin.dom.elements_nnvvt4$($receiver);
+  }}, get_elements_ejp6nl$:{value:function($receiver) {
     var tmp$0;
-    while ($receiver.hasChildNodes()) {
-      $receiver.removeChild((tmp$0 = $receiver.firstChild) != null ? tmp$0 : Kotlin.throwNPE());
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.elements_cjmw3z$($receiver) : null) != null ? tmp$0 : _.kotlin.emptyList();
+  }}, elements_cjmw3z$_0:function($receiver, localName) {
+    var tmp$0;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.elements_cjmw3z$($receiver, localName) : null) != null ? tmp$0 : _.kotlin.emptyList();
+  }, elements_cjmw3z$:function($receiver, localName) {
+    if (localName === void 0) {
+      localName = "*";
     }
-  }, removeFromParent_asww5t$:function($receiver) {
+    return _.kotlin.dom.asElementList_1($receiver.getElementsByTagName(localName));
+  }, elements_nnvvt4$:function($receiver, localName) {
+    var tmp$0, tmp$1;
+    if (localName === void 0) {
+      localName = "*";
+    }
+    return(tmp$1 = (tmp$0 = $receiver != null ? $receiver.getElementsByTagName(localName) : null) != null ? _.kotlin.dom.asElementList_1(tmp$0) : null) != null ? tmp$1 : _.kotlin.emptyList();
+  }, elements_achogv$:function($receiver, namespaceUri, localName) {
     var tmp$0;
-    (tmp$0 = $receiver.parentNode) != null ? tmp$0.removeChild($receiver) : null;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.elements_achogv$_0($receiver, namespaceUri, localName) : null) != null ? tmp$0 : _.kotlin.emptyList();
+  }, elements_achogv$_0:function($receiver, namespaceUri, localName) {
+    return _.kotlin.dom.asElementList_1($receiver.getElementsByTagNameNS(namespaceUri, localName));
+  }, elements_awnjmu$:function($receiver, namespaceUri, localName) {
+    var tmp$0, tmp$1;
+    return(tmp$1 = (tmp$0 = $receiver != null ? $receiver.getElementsByTagNameNS(namespaceUri, localName) : null) != null ? _.kotlin.dom.asElementList_1(tmp$0) : null) != null ? tmp$1 : _.kotlin.emptyList();
+  }, asList_d3eamn$_0:function($receiver) {
+    var tmp$0;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asList_d3eamn$($receiver) : null) != null ? tmp$0 : _.kotlin.emptyList();
+  }, asList_d3eamn$:function($receiver) {
+    return new _.kotlin.dom.NodeListAsList($receiver);
+  }, toElementList_d3eamn$:function($receiver) {
+    var tmp$0;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asElementList_d3eamn$($receiver) : null) != null ? tmp$0 : _.kotlin.emptyList();
+  }, asElementList_d3eamn$:function($receiver) {
+    return $receiver.length === 0 ? _.kotlin.emptyList() : new _.kotlin.dom.ElementListAsList($receiver);
+  }, filterElements_pee928$:function($receiver) {
+    var destination = new Kotlin.ArrayList;
+    var tmp$0;
+    tmp$0 = $receiver.iterator();
+    while (tmp$0.hasNext()) {
+      var element = tmp$0.next();
+      if (_.kotlin.dom.get_isElement_asww5t$(element)) {
+        destination.add_za3rmp$(element);
+      }
+    }
+    return destination;
+  }, filterElements_d3eamn$:function($receiver) {
+    return _.kotlin.dom.filterElements_pee928$(_.kotlin.dom.asList_d3eamn$($receiver));
   }, NodeListAsList:Kotlin.createClass(function() {
     return[Kotlin.AbstractList];
   }, function $fun(delegate) {
@@ -19728,12 +21694,10 @@
     return this.delegate_jo5qae$.length;
   }}, get_za3lpa$:function(index) {
     var tmp$0;
-    var $receiver = this;
-    if ((new Kotlin.NumberRange(0, $receiver.size - 1)).contains(index)) {
+    if ((new Kotlin.NumberRange(0, this.size - 1)).contains_htax2k$(index)) {
       return(tmp$0 = this.delegate_jo5qae$.item(index)) != null ? tmp$0 : Kotlin.throwNPE();
     } else {
-      var $receiver_0 = this;
-      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + ($receiver_0.size - 1) + ")");
+      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + (this.size - 1) + ")");
     }
   }}), ElementListAsList:Kotlin.createClass(function() {
     return[Kotlin.AbstractList];
@@ -19799,104 +21763,24 @@
     }});
   }}), get_isText_asww5t$:{value:function($receiver) {
     return $receiver.nodeType === Node.TEXT_NODE || $receiver.nodeType === Node.CDATA_SECTION_NODE;
+  }}, get_isElement_asww5t$:{value:function($receiver) {
+    return $receiver.nodeType === Node.ELEMENT_NODE;
   }}, attribute_cjmw3z$:function($receiver, name) {
     var tmp$0;
     return(tmp$0 = $receiver.getAttribute(name)) != null ? tmp$0 : "";
   }, get_head_d3eamn$:{value:function($receiver) {
-    return $receiver != null && $receiver.length > 0 ? $receiver.item(0) : null;
+    var tmp$0;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asList_d3eamn$($receiver) : null) != null ? _.kotlin.firstOrNull_fvq2g0$(tmp$0) : null;
   }}, get_first_d3eamn$:{value:function($receiver) {
-    return _.kotlin.dom.get_head_d3eamn$($receiver);
-  }}, get_tail_d3eamn$:{value:function($receiver) {
-    if ($receiver == null) {
-      return null;
-    } else {
-      var s = $receiver.length;
-      return s > 0 ? $receiver.item(s - 1) : null;
-    }
+    var tmp$0;
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asList_d3eamn$($receiver) : null) != null ? _.kotlin.firstOrNull_fvq2g0$(tmp$0) : null;
   }}, get_last_d3eamn$:{value:function($receiver) {
-    return _.kotlin.dom.get_tail_d3eamn$($receiver);
-  }}, toXmlString_rfvvv0$:function($receiver, xmlDeclaration) {
     var tmp$0;
-    if (xmlDeclaration === void 0) {
-      xmlDeclaration = false;
-    }
-    if ($receiver == null) {
-      tmp$0 = "";
-    } else {
-      tmp$0 = _.kotlin.dom.nodesToXmlString_8hdsij$(_.kotlin.dom.toList_d3eamn$($receiver), xmlDeclaration);
-    }
-    return tmp$0;
-  }, nodesToXmlString_8hdsij$:function(nodes, xmlDeclaration) {
-    if (xmlDeclaration === void 0) {
-      xmlDeclaration = false;
-    }
-    var destination = new Kotlin.ArrayList(_.kotlin.collectionSizeOrDefault_pjxt3m$(nodes, 10));
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asList_d3eamn$($receiver) : null) != null ? _.kotlin.lastOrNull_fvq2g0$(tmp$0) : null;
+  }}, get_tail_d3eamn$:{value:function($receiver) {
     var tmp$0;
-    tmp$0 = nodes.iterator();
-    while (tmp$0.hasNext()) {
-      var item = tmp$0.next();
-      destination.add_za3rmp$(_.kotlin.dom.toXmlString_rq0l4m$(item, xmlDeclaration));
-    }
-    return _.kotlin.joinToString_aw7tsx$(destination);
-  }, plus_6xfunm$:function($receiver, child) {
-    if (child != null) {
-      $receiver.appendChild(child);
-    }
-    return $receiver;
-  }, plus_cjmw3z$:function($receiver, text) {
-    return _.kotlin.dom.addText_esmrqt$($receiver, text);
-  }, plusAssign_cjmw3z$:function($receiver, text) {
-    return _.kotlin.dom.addText_esmrqt$($receiver, text);
-  }, createElement_juqb3g$:function($receiver, name, init) {
-    var elem = $receiver.createElement(name);
-    init.call(elem);
-    return elem;
-  }, createElement_hart3b$:function($receiver, name, doc, init) {
-    if (doc === void 0) {
-      doc = null;
-    }
-    var elem = _.kotlin.dom.ownerDocument_pmnl5l$($receiver, doc).createElement(name);
-    init.call(elem);
-    return elem;
-  }, ownerDocument_pmnl5l$:function($receiver, doc) {
-    if (doc === void 0) {
-      doc = null;
-    }
-    var answer = $receiver.nodeType === Node.DOCUMENT_NODE ? $receiver : doc == null ? $receiver.ownerDocument : doc;
-    if (answer == null) {
-      throw new Kotlin.IllegalArgumentException("Element does not have an ownerDocument and none was provided for: " + $receiver);
-    } else {
-      return answer;
-    }
-  }, addElement_juqb3g$:function($receiver, name, init) {
-    var child = _.kotlin.dom.createElement_juqb3g$($receiver, name, init);
-    $receiver.appendChild(child);
-    return child;
-  }, addElement_hart3b$:function($receiver, name, doc, init) {
-    if (doc === void 0) {
-      doc = null;
-    }
-    var child = _.kotlin.dom.createElement_hart3b$($receiver, name, doc, init);
-    $receiver.appendChild(child);
-    return child;
-  }, addText_esmrqt$:function($receiver, text, doc) {
-    if (doc === void 0) {
-      doc = null;
-    }
-    if (text != null) {
-      var child = _.kotlin.dom.ownerDocument_pmnl5l$($receiver, doc).createTextNode(text);
-      $receiver.appendChild(child);
-    }
-    return $receiver;
-  }, appendText_esmrqt$:function($receiver, text, doc) {
-    var tmp$0;
-    if (doc === void 0) {
-      doc = (tmp$0 = $receiver.ownerDocument) != null ? tmp$0 : Kotlin.throwNPE();
-    }
-    $receiver.appendChild(doc.createTextNode(text));
-  }, appendTo_5kzm9c$:function($receiver, parent) {
-    parent.appendChild($receiver);
-  }, eventHandler_kcwmyb$:function(handler) {
+    return(tmp$0 = $receiver != null ? _.kotlin.dom.asList_d3eamn$($receiver) : null) != null ? _.kotlin.lastOrNull_fvq2g0$(tmp$0) : null;
+  }}, eventHandler_kcwmyb$:function(handler) {
     return new _.kotlin.dom.EventListenerHandler(handler);
   }, EventListenerHandler:Kotlin.createClass(null, function(handler) {
     this.handler_nfhy41$ = handler;
@@ -19944,6 +21828,95 @@
       capture = false;
     }
     return _.kotlin.dom.on_edii0a$($receiver, "dblclick", capture, _.kotlin.dom.mouseEventHandler_3m19zy$(handler));
+  }, get_nnvvt4$:function($receiver, selector) {
+    var tmp$0, tmp$1, tmp$2;
+    return(tmp$2 = (tmp$1 = (tmp$0 = $receiver != null ? $receiver.querySelectorAll(selector) : null) != null ? _.kotlin.dom.asList_d3eamn$(tmp$0) : null) != null ? _.kotlin.dom.filterElements_pee928$(tmp$1) : null) != null ? tmp$2 : _.kotlin.emptyList();
+  }, get_cjmw3z$:function($receiver, selector) {
+    return _.kotlin.dom.filterElements_pee928$(_.kotlin.dom.asList_d3eamn$($receiver.querySelectorAll(selector)));
+  }, HTMLCollectionListView:Kotlin.createClass(function() {
+    return[Kotlin.AbstractList];
+  }, function $fun(collection) {
+    $fun.baseInitializer.call(this);
+    this.collection = collection;
+  }, {size:{get:function() {
+    return this.collection.length;
+  }}, get_za3lpa$:function(index) {
+    var tmp$0;
+    if ((new Kotlin.NumberRange(0, this.size - 1)).contains_htax2k$(index)) {
+      return(tmp$0 = this.collection.item(index)) != null ? tmp$0 : Kotlin.throwNPE();
+    } else {
+      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + (this.size - 1) + ")");
+    }
+  }}), asList_sg7yuw$:function($receiver) {
+    return new _.kotlin.dom.HTMLCollectionListView($receiver);
+  }, DOMTokenListView:Kotlin.createClass(function() {
+    return[Kotlin.AbstractList];
+  }, function $fun(delegate) {
+    $fun.baseInitializer.call(this);
+    this.delegate = delegate;
+  }, {size:{get:function() {
+    return this.delegate.length;
+  }}, get_za3lpa$:function(index) {
+    var tmp$0;
+    if ((new Kotlin.NumberRange(0, this.size - 1)).contains_htax2k$(index)) {
+      return(tmp$0 = this.delegate.item(index)) != null ? tmp$0 : Kotlin.throwNPE();
+    } else {
+      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + (this.size - 1) + ")");
+    }
+  }}), asList_u75qis$:function($receiver) {
+    return new _.kotlin.dom.DOMTokenListView($receiver);
+  }, asElementList_1:function($receiver) {
+    return _.kotlin.dom.asList_sg7yuw$($receiver);
+  }, clear_asww5t$:function($receiver) {
+    var tmp$0;
+    while ($receiver.hasChildNodes()) {
+      $receiver.removeChild((tmp$0 = $receiver.firstChild) != null ? tmp$0 : Kotlin.throwNPE());
+    }
+  }, removeFromParent_asww5t$:function($receiver) {
+    var tmp$0;
+    (tmp$0 = $receiver.parentNode) != null ? tmp$0.removeChild($receiver) : null;
+  }, plus_6xfunm$:function($receiver, child) {
+    $receiver.appendChild(child);
+    return $receiver;
+  }, plus_cjmw3z$:function($receiver, text) {
+    return _.kotlin.dom.appendText_esmrqt$($receiver, text);
+  }, plusAssign_cjmw3z$:function($receiver, text) {
+    _.kotlin.dom.appendText_esmrqt$($receiver, text);
+  }, ownerDocument_pmnl5l$:function($receiver, doc) {
+    var tmp$0;
+    if (doc === void 0) {
+      doc = null;
+    }
+    if ($receiver.nodeType === Node.DOCUMENT_NODE) {
+      return $receiver;
+    } else {
+      tmp$0 = doc != null ? doc : $receiver.ownerDocument;
+      if (tmp$0 == null) {
+        throw new Kotlin.IllegalArgumentException("Neither node contains nor parameter doc provides an owner document for " + $receiver);
+      }
+      return tmp$0;
+    }
+  }, addText_esmrqt$:function($receiver, text, doc) {
+    if (doc === void 0) {
+      doc = null;
+    }
+    return _.kotlin.dom.appendText_esmrqt$($receiver, text, doc);
+  }, addText_cjmw3z$:function($receiver, text) {
+    return _.kotlin.dom.appendText_esmrqt$($receiver, text);
+  }, appendText_esmrqt$:function($receiver, text, doc) {
+    if (doc === void 0) {
+      doc = null;
+    }
+    $receiver.appendChild(_.kotlin.dom.ownerDocument_pmnl5l$($receiver, doc).createTextNode(text));
+    return $receiver;
+  }, appendTo_5kzm9c$:function($receiver, parent) {
+    parent.appendChild($receiver);
+  }, createDocument:function() {
+    return new Document;
+  }, toXmlString_asww5t$:function($receiver) {
+    return $receiver.outerHTML;
+  }, toXmlString_rq0l4m$:function($receiver, xmlDeclaration) {
+    return $receiver.outerHTML;
   }}), test:Kotlin.definePackage(function() {
     this.asserter = new _.kotlin.test.QUnitAsserter;
   }, {todo_un3fny$:function(block) {
@@ -20179,21 +22152,9 @@
     return[Kotlin.modules["builtins"].kotlin.Annotation];
   }, null), OnlyInputTypes:Kotlin.createClass(function() {
     return[Kotlin.modules["builtins"].kotlin.Annotation];
-  }, null)}), platform:Kotlin.definePackage(null, {platformName:Kotlin.createClass(function() {
-    return[Kotlin.modules["builtins"].kotlin.Annotation];
-  }, function(name) {
-    this.name = name;
-  }), platformStatic:Kotlin.createClass(function() {
-    return[Kotlin.modules["builtins"].kotlin.Annotation];
   }, null)}), properties:Kotlin.definePackage(function() {
     this.Delegates = Kotlin.createObject(null, null, {notNull:function() {
       return new _.kotlin.properties.NotNullVar;
-    }, lazy_un3fny$:function(initializer) {
-      return new _.kotlin.properties.LazyVal(initializer);
-    }, blockingLazy_pzucw5$:function(lock, initializer) {
-      return new _.kotlin.properties.BlockingLazyVal(lock, initializer);
-    }, blockingLazy_un3fny$:function(initializer) {
-      return new _.kotlin.properties.BlockingLazyVal(null, initializer);
     }, observable_toa4sq$:Kotlin.defineInlineFunction("stdlib.kotlin.properties.Delegates.observable_toa4sq$", function(initialValue, onChange) {
       return _.kotlin.properties.observable_toa4sq$f(initialValue, onChange);
     }), vetoable_jyribq$:Kotlin.defineInlineFunction("stdlib.kotlin.properties.Delegates.vetoable_jyribq$", function(initialValue, onChange) {
@@ -20207,7 +22168,6 @@
     }, mapVal_sdg8f7$:function(map, default_0) {
       return new _.kotlin.properties.FixedMapVal(map, _.kotlin.properties.propertyNameSelector_p7s0z1$, default_0);
     }});
-    this.NULL_VALUE = Kotlin.createObject(null, null);
     this.propertyNameSelector_p7s0z1$ = _.kotlin.properties.propertyNameSelector_p7s0z1$f;
     this.throwKeyNotFound_wzfu2$ = _.kotlin.properties.throwKeyNotFound_wzfu2$f;
   }, {observable_toa4sq$f:function(initialValue, onChange) {
@@ -20239,15 +22199,7 @@
     return tmp$0;
   }, setValue_w32e13$:function(thisRef, property, value) {
     this.value_s2ygim$ = value;
-  }}), ObservableProperty_jyribq$:function(initialValue, onChange) {
-    return Kotlin.createObject(function() {
-      return[_.kotlin.properties.ObservableProperty];
-    }, function $fun() {
-      $fun.baseInitializer.call(this, initialValue);
-    }, {beforeChange_lle7lx$:function(property, oldValue, newValue) {
-      return onChange(property, oldValue, newValue);
-    }});
-  }, ObservableProperty:Kotlin.createClass(function() {
+  }}), ObservableProperty:Kotlin.createClass(function() {
     return[_.kotlin.properties.ReadWriteProperty];
   }, function(initialValue) {
     this.value_gpmoc7$ = initialValue;
@@ -20263,45 +22215,6 @@
     }
     this.value_gpmoc7$ = value;
     this.afterChange_lle7lx$(property, oldValue, value);
-  }}), escape:function(value) {
-    return value != null ? value : _.kotlin.properties.NULL_VALUE;
-  }, unescape:function(value) {
-    return value === _.kotlin.properties.NULL_VALUE ? null : value;
-  }, LazyVal:Kotlin.createClass(function() {
-    return[_.kotlin.properties.ReadOnlyProperty];
-  }, function(initializer) {
-    this.initializer_m2j92r$ = initializer;
-    this.value_unkxku$ = null;
-  }, {getValue_dsk1ci$:function(thisRef, property) {
-    if (this.value_unkxku$ == null) {
-      this.value_unkxku$ = _.kotlin.properties.escape(this.initializer_m2j92r$());
-    }
-    return _.kotlin.properties.unescape(this.value_unkxku$);
-  }}), BlockingLazyVal:Kotlin.createClass(function() {
-    return[_.kotlin.properties.ReadOnlyProperty];
-  }, function(lock, initializer) {
-    this.initializer_uavk8u$ = initializer;
-    this.lock_dddp3j$ = lock != null ? lock : this;
-    this.value_bimipf$ = null;
-  }, {getValue_dsk1ci$:function(thisRef, property) {
-    var _v1 = this.value_bimipf$;
-    if (_v1 != null) {
-      return _.kotlin.properties.unescape(_v1);
-    }
-    var lock = this.lock_dddp3j$;
-    var block = _.kotlin.properties.BlockingLazyVal.getValue_dsk1ci$f(this);
-    return block();
-  }}, {getValue_dsk1ci$f:function(this$BlockingLazyVal) {
-    return function() {
-      var _v2 = this$BlockingLazyVal.value_bimipf$;
-      if (_v2 != null) {
-        return _.kotlin.properties.unescape(_v2);
-      } else {
-        var typedValue = this$BlockingLazyVal.initializer_uavk8u$();
-        this$BlockingLazyVal.value_bimipf$ = _.kotlin.properties.escape(typedValue);
-        return typedValue;
-      }
-    };
   }}), MapVal:Kotlin.createClass(function() {
     return[_.kotlin.properties.ReadOnlyProperty];
   }, null, {default_dsk1ci$:function(ref, property) {
@@ -20361,8 +22274,8 @@
     this.default_jbsaf0$ = default_0;
   }, {map_za3rmp$:function(ref) {
     return this.map_s87oyp$;
-  }, key_2a5go5$:function(desc) {
-    return this.key_s87qce$(desc);
+  }, key_2a5go5$:function(property) {
+    return this.key_s87qce$(property);
   }, default_dsk1ci$:function(ref, property) {
     return this.default_jbsaf0$(ref, this.key_2a5go5$(property));
   }}), ReadOnlyProperty:Kotlin.createTrait(null), ReadWriteProperty:Kotlin.createTrait(null), getValue_52dry6$:function($receiver, thisRef, property) {
@@ -20371,196 +22284,91 @@
     return _.kotlin.getOrImplicitDefault_qbyksu$($receiver, property.name);
   }, setValue_tiqlhb$:function($receiver, thisRef, property, value) {
     $receiver.put_wn2jw4$(property.name, value);
-  }})}), org:Kotlin.definePackage(null, {w3c:Kotlin.definePackage(null, {dom:Kotlin.definePackage(null, {HTMLCollectionListView:Kotlin.createClass(function() {
-    return[Kotlin.AbstractList];
-  }, function $fun(collection) {
-    $fun.baseInitializer.call(this);
-    this.collection = collection;
-  }, {size:{get:function() {
-    return this.collection.length;
-  }}, get_za3lpa$:function(index) {
-    var tmp$0;
-    var $receiver = this;
-    if ((new Kotlin.NumberRange(0, $receiver.size - 1)).contains(index)) {
-      return(tmp$0 = this.collection.item(index)) != null ? tmp$0 : Kotlin.throwNPE();
-    } else {
-      var $receiver_0 = this;
-      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + ($receiver_0.size - 1) + ")");
-    }
-  }}), asList_sg7yuw$:function($receiver) {
-    return new _.org.w3c.dom.HTMLCollectionListView($receiver);
-  }, toElementList_sg7yuw$:function($receiver) {
-    var tmp$0;
-    return(tmp$0 = $receiver != null ? _.org.w3c.dom.asList_sg7yuw$($receiver) : null) != null ? tmp$0 : _.kotlin.emptyList();
-  }, DOMTokenListView:Kotlin.createClass(function() {
-    return[Kotlin.AbstractList];
-  }, function $fun(delegate) {
-    $fun.baseInitializer.call(this);
-    this.delegate = delegate;
-  }, {size:{get:function() {
-    return this.delegate.length;
-  }}, get_za3lpa$:function(index) {
-    var tmp$0;
-    var $receiver = this;
-    if ((new Kotlin.NumberRange(0, $receiver.size - 1)).contains(index)) {
-      return(tmp$0 = this.delegate.item(index)) != null ? tmp$0 : Kotlin.throwNPE();
-    } else {
-      var $receiver_0 = this;
-      throw new Kotlin.IndexOutOfBoundsException("index " + index + " is not in range [0 .. " + ($receiver_0.size - 1) + ")");
-    }
-  }}), asList_u75qis$:function($receiver) {
-    return new _.org.w3c.dom.DOMTokenListView($receiver);
-  }, TrackEventInit_u7e3y1$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.TrackEventInit_u7e3y1$", function(track, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["track"] = track;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), AutocompleteErrorEventInit_o0ij6q$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.AutocompleteErrorEventInit_o0ij6q$", function(reason, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["reason"] = reason;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), RelatedEventInit_w30gy5$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.RelatedEventInit_w30gy5$", function(relatedTarget, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["relatedTarget"] = relatedTarget;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), CanvasRenderingContext2DSettings_6taknv$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CanvasRenderingContext2DSettings_6taknv$", function(alpha) {
+  }})}), java:Kotlin.definePackage(null, {io:Kotlin.definePackage(null, {Serializable:Kotlin.createTrait(null)}), lang:Kotlin.definePackage(null, {Runnable_qshda6$:function(action) {
+    return Kotlin.createObject(function() {
+      return[Kotlin.Runnable];
+    }, null, {run:function() {
+      action();
+    }});
+  }, StringBuilder_za3lpa$:Kotlin.defineInlineFunction("stdlib.java.lang.StringBuilder_za3lpa$", function(capacity) {
+    return new Kotlin.StringBuilder;
+  }), StringBuilder_6bul2c$:Kotlin.defineInlineFunction("stdlib.java.lang.StringBuilder_6bul2c$", function(content) {
+    return new Kotlin.StringBuilder(content.toString());
+  })}), util:Kotlin.definePackage(function() {
+    this.Collections = Kotlin.createObject(null, null, {max_irqdkn$:function(col, comp) {
+      return Kotlin.collectionsMax(col, comp);
+    }, sort_efuixw$:function(list) {
+      Kotlin.collectionsSort(list, _.kotlin.naturalOrder());
+    }, sort_a7cel1$:function(list, comparator) {
+      Kotlin.collectionsSort(list, comparator);
+    }, reverse_a4ebza$:function(list) {
+      var tmp$0;
+      var size = list.size;
+      tmp$0 = (size / 2 | 0) - 1;
+      for (var i = 0;i <= tmp$0;i++) {
+        var i2 = size - i - 1;
+        var tmp = list.get_za3lpa$(i);
+        list.set_vux3hl$(i, list.get_za3lpa$(i2));
+        list.set_vux3hl$(i2, tmp);
+      }
+    }});
+  }, {HashSet_4fm7v2$:function(c) {
+    var $receiver = new Kotlin.ComplexHashSet(c.size);
+    $receiver.addAll_4fm7v2$(c);
+    return $receiver;
+  }, LinkedHashSet_4fm7v2$:function(c) {
+    var $receiver = new Kotlin.LinkedHashSet(c.size);
+    $receiver.addAll_4fm7v2$(c);
+    return $receiver;
+  }, HashMap_48yl7j$:function(m) {
+    var $receiver = new Kotlin.ComplexHashMap(m.size);
+    $receiver.putAll_48yl7j$(m);
+    return $receiver;
+  }, LinkedHashMap_48yl7j$:function(m) {
+    var $receiver = new Kotlin.LinkedHashMap(m.size);
+    $receiver.putAll_48yl7j$(m);
+    return $receiver;
+  }, ArrayList_4fm7v2$:function(c) {
+    var $receiver = new Kotlin.ArrayList;
+    var $receiver_0 = $receiver;
+    $receiver_0.array = Kotlin.copyToArray(c);
+    return $receiver;
+  }})}), org:Kotlin.definePackage(null, {khronos:Kotlin.definePackage(null, {webgl:Kotlin.definePackage(null, {WebGLContextAttributes_aby97w$:Kotlin.defineInlineFunction("stdlib.org.khronos.webgl.WebGLContextAttributes_aby97w$", function(alpha, depth, stencil, antialias, premultipliedAlpha, preserveDrawingBuffer, preferLowPowerToHighPerformance, failIfMajorPerformanceCaveat) {
     if (alpha === void 0) {
       alpha = true;
     }
+    if (depth === void 0) {
+      depth = true;
+    }
+    if (stencil === void 0) {
+      stencil = false;
+    }
+    if (antialias === void 0) {
+      antialias = true;
+    }
+    if (premultipliedAlpha === void 0) {
+      premultipliedAlpha = true;
+    }
+    if (preserveDrawingBuffer === void 0) {
+      preserveDrawingBuffer = false;
+    }
+    if (preferLowPowerToHighPerformance === void 0) {
+      preferLowPowerToHighPerformance = false;
+    }
+    if (failIfMajorPerformanceCaveat === void 0) {
+      failIfMajorPerformanceCaveat = false;
+    }
     var o = {};
     o["alpha"] = alpha;
+    o["depth"] = depth;
+    o["stencil"] = stencil;
+    o["antialias"] = antialias;
+    o["premultipliedAlpha"] = premultipliedAlpha;
+    o["preserveDrawingBuffer"] = preserveDrawingBuffer;
+    o["preferLowPowerToHighPerformance"] = preferLowPowerToHighPerformance;
+    o["failIfMajorPerformanceCaveat"] = failIfMajorPerformanceCaveat;
     return o;
-  }), HitRegionOptions_7peykz$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.HitRegionOptions_7peykz$", function(path, fillRule, id, parentID, cursor, control, label, role) {
-    if (path === void 0) {
-      path = null;
-    }
-    if (fillRule === void 0) {
-      fillRule = "nonzero";
-    }
-    if (id === void 0) {
-      id = "";
-    }
-    if (parentID === void 0) {
-      parentID = null;
-    }
-    if (cursor === void 0) {
-      cursor = "inherit";
-    }
-    if (control === void 0) {
-      control = null;
-    }
-    if (label === void 0) {
-      label = null;
-    }
-    if (role === void 0) {
-      role = null;
-    }
-    var o = {};
-    o["path"] = path;
-    o["fillRule"] = fillRule;
-    o["id"] = id;
-    o["parentID"] = parentID;
-    o["cursor"] = cursor;
-    o["control"] = control;
-    o["label"] = label;
-    o["role"] = role;
-    return o;
-  }), DragEventInit_mm3m7l$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DragEventInit_mm3m7l$", function(dataTransfer, screenX, screenY, clientX, clientY, button, buttons, relatedTarget, ctrlKey, shiftKey, altKey, metaKey, modifierAltGraph, modifierCapsLock, modifierFn, modifierFnLock, modifierHyper, modifierNumLock, modifierOS, modifierScrollLock, modifierSuper, modifierSymbol, modifierSymbolLock, view, detail, bubbles, cancelable) {
-    if (screenX === void 0) {
-      screenX = 0;
-    }
-    if (screenY === void 0) {
-      screenY = 0;
-    }
-    if (clientX === void 0) {
-      clientX = 0;
-    }
-    if (clientY === void 0) {
-      clientY = 0;
-    }
-    if (button === void 0) {
-      button = 0;
-    }
-    if (buttons === void 0) {
-      buttons = 0;
-    }
-    if (relatedTarget === void 0) {
-      relatedTarget = null;
-    }
-    if (ctrlKey === void 0) {
-      ctrlKey = false;
-    }
-    if (shiftKey === void 0) {
-      shiftKey = false;
-    }
-    if (altKey === void 0) {
-      altKey = false;
-    }
-    if (metaKey === void 0) {
-      metaKey = false;
-    }
-    if (modifierAltGraph === void 0) {
-      modifierAltGraph = false;
-    }
-    if (modifierCapsLock === void 0) {
-      modifierCapsLock = false;
-    }
-    if (modifierFn === void 0) {
-      modifierFn = false;
-    }
-    if (modifierFnLock === void 0) {
-      modifierFnLock = false;
-    }
-    if (modifierHyper === void 0) {
-      modifierHyper = false;
-    }
-    if (modifierNumLock === void 0) {
-      modifierNumLock = false;
-    }
-    if (modifierOS === void 0) {
-      modifierOS = false;
-    }
-    if (modifierScrollLock === void 0) {
-      modifierScrollLock = false;
-    }
-    if (modifierSuper === void 0) {
-      modifierSuper = false;
-    }
-    if (modifierSymbol === void 0) {
-      modifierSymbol = false;
-    }
-    if (modifierSymbolLock === void 0) {
-      modifierSymbolLock = false;
-    }
-    if (view === void 0) {
-      view = null;
-    }
-    if (detail === void 0) {
-      detail = 0;
-    }
+  }), WebGLContextEventInit_o0ij6q$:Kotlin.defineInlineFunction("stdlib.org.khronos.webgl.WebGLContextEventInit_o0ij6q$", function(statusMessage, bubbles, cancelable) {
     if (bubbles === void 0) {
       bubbles = false;
     }
@@ -20568,289 +22376,11 @@
       cancelable = false;
     }
     var o = {};
-    o["dataTransfer"] = dataTransfer;
-    o["screenX"] = screenX;
-    o["screenY"] = screenY;
-    o["clientX"] = clientX;
-    o["clientY"] = clientY;
-    o["button"] = button;
-    o["buttons"] = buttons;
-    o["relatedTarget"] = relatedTarget;
-    o["ctrlKey"] = ctrlKey;
-    o["shiftKey"] = shiftKey;
-    o["altKey"] = altKey;
-    o["metaKey"] = metaKey;
-    o["modifierAltGraph"] = modifierAltGraph;
-    o["modifierCapsLock"] = modifierCapsLock;
-    o["modifierFn"] = modifierFn;
-    o["modifierFnLock"] = modifierFnLock;
-    o["modifierHyper"] = modifierHyper;
-    o["modifierNumLock"] = modifierNumLock;
-    o["modifierOS"] = modifierOS;
-    o["modifierScrollLock"] = modifierScrollLock;
-    o["modifierSuper"] = modifierSuper;
-    o["modifierSymbol"] = modifierSymbol;
-    o["modifierSymbolLock"] = modifierSymbolLock;
-    o["view"] = view;
-    o["detail"] = detail;
+    o["statusMessage"] = statusMessage;
     o["bubbles"] = bubbles;
     o["cancelable"] = cancelable;
     return o;
-  }), PopStateEventInit_xro667$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.PopStateEventInit_xro667$", function(state, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["state"] = state;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), HashChangeEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.HashChangeEventInit_9djc0g$", function(oldURL, newURL, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["oldURL"] = oldURL;
-    o["newURL"] = newURL;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), PageTransitionEventInit_ws0pad$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.PageTransitionEventInit_ws0pad$", function(persisted, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["persisted"] = persisted;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), ErrorEventInit_os3ye3$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ErrorEventInit_os3ye3$", function(message, filename, lineno, colno, error, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["message"] = message;
-    o["filename"] = filename;
-    o["lineno"] = lineno;
-    o["colno"] = colno;
-    o["error"] = error;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), MessageEventInit_b4x2sp$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.MessageEventInit_b4x2sp$", function(data, origin, lastEventId, source, ports, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["data"] = data;
-    o["origin"] = origin;
-    o["lastEventId"] = lastEventId;
-    o["source"] = source;
-    o["ports"] = ports;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), EventSourceInit_6taknv$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EventSourceInit_6taknv$", function(withCredentials) {
-    if (withCredentials === void 0) {
-      withCredentials = false;
-    }
-    var o = {};
-    o["withCredentials"] = withCredentials;
-    return o;
-  }), CloseEventInit_kz92y6$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CloseEventInit_kz92y6$", function(wasClean, code, reason, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["wasClean"] = wasClean;
-    o["code"] = code;
-    o["reason"] = reason;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), StorageEventInit_hhd9ie$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.StorageEventInit_hhd9ie$", function(key, oldValue, newValue, url, storageArea, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["key"] = key;
-    o["oldValue"] = oldValue;
-    o["newValue"] = newValue;
-    o["url"] = url;
-    o["storageArea"] = storageArea;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), EventInit_dqye30$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EventInit_dqye30$", function(bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), CustomEventInit_xro667$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CustomEventInit_xro667$", function(detail, bubbles, cancelable) {
-    if (detail === void 0) {
-      detail = null;
-    }
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["detail"] = detail;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), MutationObserverInit_aj2h80$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.MutationObserverInit_aj2h80$", function(childList, attributes, characterData, subtree, attributeOldValue, characterDataOldValue, attributeFilter) {
-    if (childList === void 0) {
-      childList = false;
-    }
-    if (subtree === void 0) {
-      subtree = false;
-    }
-    var o = {};
-    o["childList"] = childList;
-    o["attributes"] = attributes;
-    o["characterData"] = characterData;
-    o["subtree"] = subtree;
-    o["attributeOldValue"] = attributeOldValue;
-    o["characterDataOldValue"] = characterDataOldValue;
-    o["attributeFilter"] = attributeFilter;
-    return o;
-  }), EditingBeforeInputEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EditingBeforeInputEventInit_9djc0g$", function(command, value, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["command"] = command;
-    o["value"] = value;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), EditingInputEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EditingInputEventInit_9djc0g$", function(command, value, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["command"] = command;
-    o["value"] = value;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  }), DOMPointInit_6y0v78$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DOMPointInit_6y0v78$", function(x, y, z, w) {
-    if (x === void 0) {
-      x = 0;
-    }
-    if (y === void 0) {
-      y = 0;
-    }
-    if (z === void 0) {
-      z = 0;
-    }
-    if (w === void 0) {
-      w = 1;
-    }
-    var o = {};
-    o["x"] = x;
-    o["y"] = y;
-    o["z"] = z;
-    o["w"] = w;
-    return o;
-  }), DOMRectInit_6y0v78$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DOMRectInit_6y0v78$", function(x, y, width, height) {
-    if (x === void 0) {
-      x = 0;
-    }
-    if (y === void 0) {
-      y = 0;
-    }
-    if (width === void 0) {
-      width = 0;
-    }
-    if (height === void 0) {
-      height = 0;
-    }
-    var o = {};
-    o["x"] = x;
-    o["y"] = y;
-    o["width"] = width;
-    o["height"] = height;
-    return o;
-  }), ScrollOptions_61zpoe$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptions_61zpoe$", function(behavior) {
-    if (behavior === void 0) {
-      behavior = "auto";
-    }
-    var o = {};
-    o["behavior"] = behavior;
-    return o;
-  }), ScrollOptionsHorizontal_t0es5s$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptionsHorizontal_t0es5s$", function(x, behavior) {
-    if (behavior === void 0) {
-      behavior = "auto";
-    }
-    var o = {};
-    o["x"] = x;
-    o["behavior"] = behavior;
-    return o;
-  }), ScrollOptionsVertical_t0es5s$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptionsVertical_t0es5s$", function(y, behavior) {
-    if (behavior === void 0) {
-      behavior = "auto";
-    }
-    var o = {};
-    o["y"] = y;
-    o["behavior"] = behavior;
-    return o;
-  }), BoxQuadOptions_axdi75$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.BoxQuadOptions_axdi75$", function(box, relativeTo) {
-    if (box === void 0) {
-      box = "border";
-    }
-    var o = {};
-    o["box"] = box;
-    o["relativeTo"] = relativeTo;
-    return o;
-  }), ConvertCoordinateOptions_puj7f4$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ConvertCoordinateOptions_puj7f4$", function(fromBox, toBox) {
-    if (fromBox === void 0) {
-      fromBox = "border";
-    }
-    if (toBox === void 0) {
-      toBox = "border";
-    }
-    var o = {};
-    o["fromBox"] = fromBox;
-    o["toBox"] = toBox;
-    return o;
-  }), events:Kotlin.definePackage(null, {UIEventInit_vz9i9r$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.events.UIEventInit_vz9i9r$", function(view, detail, bubbles, cancelable) {
+  })})}), w3c:Kotlin.definePackage(null, {dom:Kotlin.definePackage(null, {events:Kotlin.definePackage(null, {UIEventInit_vz9i9r$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.events.UIEventInit_vz9i9r$", function(view, detail, bubbles, cancelable) {
     if (view === void 0) {
       view = null;
     }
@@ -21323,7 +22853,447 @@
     o["bubbles"] = bubbles;
     o["cancelable"] = cancelable;
     return o;
-  })})}), fetch:Kotlin.definePackage(null, {RequestInit_rz7b8m$:Kotlin.defineInlineFunction("stdlib.org.w3c.fetch.RequestInit_rz7b8m$", function(method, headers, body, mode, credentials, cache, redirect) {
+  })}), TrackEventInit_u7e3y1$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.TrackEventInit_u7e3y1$", function(track, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["track"] = track;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), AutocompleteErrorEventInit_o0ij6q$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.AutocompleteErrorEventInit_o0ij6q$", function(reason, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["reason"] = reason;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), RelatedEventInit_w30gy5$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.RelatedEventInit_w30gy5$", function(relatedTarget, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["relatedTarget"] = relatedTarget;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), CanvasRenderingContext2DSettings_6taknv$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CanvasRenderingContext2DSettings_6taknv$", function(alpha) {
+    if (alpha === void 0) {
+      alpha = true;
+    }
+    var o = {};
+    o["alpha"] = alpha;
+    return o;
+  }), HitRegionOptions_7peykz$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.HitRegionOptions_7peykz$", function(path, fillRule, id, parentID, cursor, control, label, role) {
+    if (path === void 0) {
+      path = null;
+    }
+    if (fillRule === void 0) {
+      fillRule = "nonzero";
+    }
+    if (id === void 0) {
+      id = "";
+    }
+    if (parentID === void 0) {
+      parentID = null;
+    }
+    if (cursor === void 0) {
+      cursor = "inherit";
+    }
+    if (control === void 0) {
+      control = null;
+    }
+    if (label === void 0) {
+      label = null;
+    }
+    if (role === void 0) {
+      role = null;
+    }
+    var o = {};
+    o["path"] = path;
+    o["fillRule"] = fillRule;
+    o["id"] = id;
+    o["parentID"] = parentID;
+    o["cursor"] = cursor;
+    o["control"] = control;
+    o["label"] = label;
+    o["role"] = role;
+    return o;
+  }), DragEventInit_mm3m7l$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DragEventInit_mm3m7l$", function(dataTransfer, screenX, screenY, clientX, clientY, button, buttons, relatedTarget, ctrlKey, shiftKey, altKey, metaKey, modifierAltGraph, modifierCapsLock, modifierFn, modifierFnLock, modifierHyper, modifierNumLock, modifierOS, modifierScrollLock, modifierSuper, modifierSymbol, modifierSymbolLock, view, detail, bubbles, cancelable) {
+    if (screenX === void 0) {
+      screenX = 0;
+    }
+    if (screenY === void 0) {
+      screenY = 0;
+    }
+    if (clientX === void 0) {
+      clientX = 0;
+    }
+    if (clientY === void 0) {
+      clientY = 0;
+    }
+    if (button === void 0) {
+      button = 0;
+    }
+    if (buttons === void 0) {
+      buttons = 0;
+    }
+    if (relatedTarget === void 0) {
+      relatedTarget = null;
+    }
+    if (ctrlKey === void 0) {
+      ctrlKey = false;
+    }
+    if (shiftKey === void 0) {
+      shiftKey = false;
+    }
+    if (altKey === void 0) {
+      altKey = false;
+    }
+    if (metaKey === void 0) {
+      metaKey = false;
+    }
+    if (modifierAltGraph === void 0) {
+      modifierAltGraph = false;
+    }
+    if (modifierCapsLock === void 0) {
+      modifierCapsLock = false;
+    }
+    if (modifierFn === void 0) {
+      modifierFn = false;
+    }
+    if (modifierFnLock === void 0) {
+      modifierFnLock = false;
+    }
+    if (modifierHyper === void 0) {
+      modifierHyper = false;
+    }
+    if (modifierNumLock === void 0) {
+      modifierNumLock = false;
+    }
+    if (modifierOS === void 0) {
+      modifierOS = false;
+    }
+    if (modifierScrollLock === void 0) {
+      modifierScrollLock = false;
+    }
+    if (modifierSuper === void 0) {
+      modifierSuper = false;
+    }
+    if (modifierSymbol === void 0) {
+      modifierSymbol = false;
+    }
+    if (modifierSymbolLock === void 0) {
+      modifierSymbolLock = false;
+    }
+    if (view === void 0) {
+      view = null;
+    }
+    if (detail === void 0) {
+      detail = 0;
+    }
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["dataTransfer"] = dataTransfer;
+    o["screenX"] = screenX;
+    o["screenY"] = screenY;
+    o["clientX"] = clientX;
+    o["clientY"] = clientY;
+    o["button"] = button;
+    o["buttons"] = buttons;
+    o["relatedTarget"] = relatedTarget;
+    o["ctrlKey"] = ctrlKey;
+    o["shiftKey"] = shiftKey;
+    o["altKey"] = altKey;
+    o["metaKey"] = metaKey;
+    o["modifierAltGraph"] = modifierAltGraph;
+    o["modifierCapsLock"] = modifierCapsLock;
+    o["modifierFn"] = modifierFn;
+    o["modifierFnLock"] = modifierFnLock;
+    o["modifierHyper"] = modifierHyper;
+    o["modifierNumLock"] = modifierNumLock;
+    o["modifierOS"] = modifierOS;
+    o["modifierScrollLock"] = modifierScrollLock;
+    o["modifierSuper"] = modifierSuper;
+    o["modifierSymbol"] = modifierSymbol;
+    o["modifierSymbolLock"] = modifierSymbolLock;
+    o["view"] = view;
+    o["detail"] = detail;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), PopStateEventInit_xro667$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.PopStateEventInit_xro667$", function(state, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["state"] = state;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), HashChangeEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.HashChangeEventInit_9djc0g$", function(oldURL, newURL, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["oldURL"] = oldURL;
+    o["newURL"] = newURL;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), PageTransitionEventInit_ws0pad$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.PageTransitionEventInit_ws0pad$", function(persisted, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["persisted"] = persisted;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), ErrorEventInit_os3ye3$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ErrorEventInit_os3ye3$", function(message, filename, lineno, colno, error, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["message"] = message;
+    o["filename"] = filename;
+    o["lineno"] = lineno;
+    o["colno"] = colno;
+    o["error"] = error;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), MessageEventInit_b4x2sp$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.MessageEventInit_b4x2sp$", function(data, origin, lastEventId, source, ports, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["data"] = data;
+    o["origin"] = origin;
+    o["lastEventId"] = lastEventId;
+    o["source"] = source;
+    o["ports"] = ports;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), EventSourceInit_6taknv$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EventSourceInit_6taknv$", function(withCredentials) {
+    if (withCredentials === void 0) {
+      withCredentials = false;
+    }
+    var o = {};
+    o["withCredentials"] = withCredentials;
+    return o;
+  }), CloseEventInit_kz92y6$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CloseEventInit_kz92y6$", function(wasClean, code, reason, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["wasClean"] = wasClean;
+    o["code"] = code;
+    o["reason"] = reason;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), StorageEventInit_hhd9ie$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.StorageEventInit_hhd9ie$", function(key, oldValue, newValue, url, storageArea, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["key"] = key;
+    o["oldValue"] = oldValue;
+    o["newValue"] = newValue;
+    o["url"] = url;
+    o["storageArea"] = storageArea;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), EventInit_dqye30$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EventInit_dqye30$", function(bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), CustomEventInit_xro667$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.CustomEventInit_xro667$", function(detail, bubbles, cancelable) {
+    if (detail === void 0) {
+      detail = null;
+    }
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["detail"] = detail;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), MutationObserverInit_aj2h80$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.MutationObserverInit_aj2h80$", function(childList, attributes, characterData, subtree, attributeOldValue, characterDataOldValue, attributeFilter) {
+    if (childList === void 0) {
+      childList = false;
+    }
+    if (subtree === void 0) {
+      subtree = false;
+    }
+    var o = {};
+    o["childList"] = childList;
+    o["attributes"] = attributes;
+    o["characterData"] = characterData;
+    o["subtree"] = subtree;
+    o["attributeOldValue"] = attributeOldValue;
+    o["characterDataOldValue"] = characterDataOldValue;
+    o["attributeFilter"] = attributeFilter;
+    return o;
+  }), EditingBeforeInputEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EditingBeforeInputEventInit_9djc0g$", function(command, value, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["command"] = command;
+    o["value"] = value;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), EditingInputEventInit_9djc0g$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.EditingInputEventInit_9djc0g$", function(command, value, bubbles, cancelable) {
+    if (bubbles === void 0) {
+      bubbles = false;
+    }
+    if (cancelable === void 0) {
+      cancelable = false;
+    }
+    var o = {};
+    o["command"] = command;
+    o["value"] = value;
+    o["bubbles"] = bubbles;
+    o["cancelable"] = cancelable;
+    return o;
+  }), DOMPointInit_6y0v78$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DOMPointInit_6y0v78$", function(x, y, z, w) {
+    if (x === void 0) {
+      x = 0;
+    }
+    if (y === void 0) {
+      y = 0;
+    }
+    if (z === void 0) {
+      z = 0;
+    }
+    if (w === void 0) {
+      w = 1;
+    }
+    var o = {};
+    o["x"] = x;
+    o["y"] = y;
+    o["z"] = z;
+    o["w"] = w;
+    return o;
+  }), DOMRectInit_6y0v78$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.DOMRectInit_6y0v78$", function(x, y, width, height) {
+    if (x === void 0) {
+      x = 0;
+    }
+    if (y === void 0) {
+      y = 0;
+    }
+    if (width === void 0) {
+      width = 0;
+    }
+    if (height === void 0) {
+      height = 0;
+    }
+    var o = {};
+    o["x"] = x;
+    o["y"] = y;
+    o["width"] = width;
+    o["height"] = height;
+    return o;
+  }), ScrollOptions_61zpoe$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptions_61zpoe$", function(behavior) {
+    if (behavior === void 0) {
+      behavior = "auto";
+    }
+    var o = {};
+    o["behavior"] = behavior;
+    return o;
+  }), ScrollOptionsHorizontal_t0es5s$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptionsHorizontal_t0es5s$", function(x, behavior) {
+    if (behavior === void 0) {
+      behavior = "auto";
+    }
+    var o = {};
+    o["x"] = x;
+    o["behavior"] = behavior;
+    return o;
+  }), ScrollOptionsVertical_t0es5s$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ScrollOptionsVertical_t0es5s$", function(y, behavior) {
+    if (behavior === void 0) {
+      behavior = "auto";
+    }
+    var o = {};
+    o["y"] = y;
+    o["behavior"] = behavior;
+    return o;
+  }), BoxQuadOptions_axdi75$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.BoxQuadOptions_axdi75$", function(box, relativeTo) {
+    if (box === void 0) {
+      box = "border";
+    }
+    var o = {};
+    o["box"] = box;
+    o["relativeTo"] = relativeTo;
+    return o;
+  }), ConvertCoordinateOptions_puj7f4$:Kotlin.defineInlineFunction("stdlib.org.w3c.dom.ConvertCoordinateOptions_puj7f4$", function(fromBox, toBox) {
+    if (fromBox === void 0) {
+      fromBox = "border";
+    }
+    if (toBox === void 0) {
+      toBox = "border";
+    }
+    var o = {};
+    o["fromBox"] = fromBox;
+    o["toBox"] = toBox;
+    return o;
+  })}), fetch:Kotlin.definePackage(null, {RequestInit_rz7b8m$:Kotlin.defineInlineFunction("stdlib.org.w3c.fetch.RequestInit_rz7b8m$", function(method, headers, body, mode, credentials, cache, redirect) {
     var o = {};
     o["method"] = method;
     o["headers"] = headers;
@@ -21542,103 +23512,7 @@
     o["bubbles"] = bubbles;
     o["cancelable"] = cancelable;
     return o;
-  })})}), khronos:Kotlin.definePackage(null, {webgl:Kotlin.definePackage(null, {WebGLContextAttributes_aby97w$:Kotlin.defineInlineFunction("stdlib.org.khronos.webgl.WebGLContextAttributes_aby97w$", function(alpha, depth, stencil, antialias, premultipliedAlpha, preserveDrawingBuffer, preferLowPowerToHighPerformance, failIfMajorPerformanceCaveat) {
-    if (alpha === void 0) {
-      alpha = true;
-    }
-    if (depth === void 0) {
-      depth = true;
-    }
-    if (stencil === void 0) {
-      stencil = false;
-    }
-    if (antialias === void 0) {
-      antialias = true;
-    }
-    if (premultipliedAlpha === void 0) {
-      premultipliedAlpha = true;
-    }
-    if (preserveDrawingBuffer === void 0) {
-      preserveDrawingBuffer = false;
-    }
-    if (preferLowPowerToHighPerformance === void 0) {
-      preferLowPowerToHighPerformance = false;
-    }
-    if (failIfMajorPerformanceCaveat === void 0) {
-      failIfMajorPerformanceCaveat = false;
-    }
-    var o = {};
-    o["alpha"] = alpha;
-    o["depth"] = depth;
-    o["stencil"] = stencil;
-    o["antialias"] = antialias;
-    o["premultipliedAlpha"] = premultipliedAlpha;
-    o["preserveDrawingBuffer"] = preserveDrawingBuffer;
-    o["preferLowPowerToHighPerformance"] = preferLowPowerToHighPerformance;
-    o["failIfMajorPerformanceCaveat"] = failIfMajorPerformanceCaveat;
-    return o;
-  }), WebGLContextEventInit_o0ij6q$:Kotlin.defineInlineFunction("stdlib.org.khronos.webgl.WebGLContextEventInit_o0ij6q$", function(statusMessage, bubbles, cancelable) {
-    if (bubbles === void 0) {
-      bubbles = false;
-    }
-    if (cancelable === void 0) {
-      cancelable = false;
-    }
-    var o = {};
-    o["statusMessage"] = statusMessage;
-    o["bubbles"] = bubbles;
-    o["cancelable"] = cancelable;
-    return o;
-  })})})}), java:Kotlin.definePackage(null, {io:Kotlin.definePackage(null, {Serializable:Kotlin.createTrait(null)}), lang:Kotlin.definePackage(null, {Runnable_qshda6$:function(action) {
-    return Kotlin.createObject(function() {
-      return[Kotlin.Runnable];
-    }, null, {run:function() {
-      action();
-    }});
-  }, StringBuilder_za3lpa$:Kotlin.defineInlineFunction("stdlib.java.lang.StringBuilder_za3lpa$", function(capacity) {
-    return new Kotlin.StringBuilder;
-  }), StringBuilder_6bul2c$:Kotlin.defineInlineFunction("stdlib.java.lang.StringBuilder_6bul2c$", function(content) {
-    return new Kotlin.StringBuilder(content.toString());
-  })}), util:Kotlin.definePackage(function() {
-    this.Collections = Kotlin.createObject(null, null, {max_irqdkn$:function(col, comp) {
-      return Kotlin.collectionsMax(col, comp);
-    }, sort_a4ebza$:function(list) {
-      Kotlin.collectionsSort(list);
-    }, sort_a7cel1$:function(list, comparator) {
-      Kotlin.collectionsSort(list, comparator);
-    }, reverse_a4ebza$:function(list) {
-      var tmp$0;
-      var size = list.size;
-      tmp$0 = (size / 2 | 0) - 1;
-      for (var i = 0;i <= tmp$0;i++) {
-        var i2 = size - i - 1;
-        var tmp = list.get_za3lpa$(i);
-        list.set_vux3hl$(i, list.get_za3lpa$(i2));
-        list.set_vux3hl$(i2, tmp);
-      }
-    }});
-  }, {HashSet_4fm7v2$:function(c) {
-    var $receiver = new Kotlin.ComplexHashSet(c.size);
-    $receiver.addAll_4fm7v2$(c);
-    return $receiver;
-  }, LinkedHashSet_4fm7v2$:function(c) {
-    var $receiver = new Kotlin.LinkedHashSet(c.size);
-    $receiver.addAll_4fm7v2$(c);
-    return $receiver;
-  }, HashMap_48yl7j$:function(m) {
-    var $receiver = new Kotlin.ComplexHashMap(m.size);
-    $receiver.putAll_48yl7j$(m);
-    return $receiver;
-  }, LinkedHashMap_48yl7j$:function(m) {
-    var $receiver = new Kotlin.LinkedHashMap(m.size);
-    $receiver.putAll_48yl7j$(m);
-    return $receiver;
-  }, ArrayList_4fm7v2$:function(c) {
-    var $receiver = new Kotlin.ArrayList;
-    var $receiver_0 = $receiver;
-    $receiver_0.array = Kotlin.copyToArray(c);
-    return $receiver;
-  }})})});
+  })})})})});
   Kotlin.defineModule("stdlib", _);
 })(Kotlin);
 if (typeof module !== "undefined" && module.exports) {
