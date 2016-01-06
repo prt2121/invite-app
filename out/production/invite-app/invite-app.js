@@ -198,7 +198,7 @@
           var resourceUrl = 'https://intense-waters-9652.herokuapp.com/invites/' + invite._id;
           var pushUrl = 'https://api.parse.com/1/push';
           var inviteTemplate = '\n' + '                      {' + '\n' + '                        ' + '"' + 'from' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.from.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.from.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.from.phoneNumber + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'to' + '"' + ': {' + '\n' + '                          ' + '"' + 'firstName' + '"' + ': ' + '"' + invite.to.firstName + '"' + ',' + '\n' + '                          ' + '"' + 'lastName' + '"' + ': ' + '"' + invite.to.lastName + '"' + ',' + '\n' + '                          ' + '"' + 'phoneNumber' + '"' + ': ' + '"' + invite.to.phoneNumber + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'destinationLatLng' + '"' + ': ' + '"' + invite.destinationLatLng + '"' + ',' + '\n' + '                        ' + '"' + 'destinationAddress' + '"' + ': ' + '"' + invite.destinationAddress + '"' + ',' + '\n' + '                        ' + '"' + 'message' + '"' + ': ' + '"' + invite.message + '"' + ',' + '\n' + '                        ' + '"' + 'status' + '"' + ': ' + '"' + 'PENDING' + '"' + ',' + '\n' + '                        ' + '"' + 'pickupAddress' + '"' + ': ' + '"' + '"' + ',' + '\n' + '                        ' + '"' + '_id' + '"' + ': ' + '"' + invite._id + '"' + '\n' + '                      }' + '\n' + '                      ';
-          var dataTemplate = '\n' + '                      {' + '\n' + '                        ' + '"' + 'where' + '"' + ': {' + '\n' + '                          ' + '"' + 'user' + '"' + ': ' + '"' + invite.from.firstName + ' ' + invite.from.lastName + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'data' + '"' + ': {' + '\n' + '                          ' + '"' + 'title' + '"' + ': ' + '"' + 'Summon' + '"' + ',' + '\n' + '                          ' + '"' + 'alert' + '"' + ': ' + '"' + 'Invite status update!' + '"' + ',' + '\n' + '                          ' + '"' + 'invite' + '"' + ': ' + '"' + 'inviteData' + '"' + '\n' + '                        }' + '\n' + '                      }' + '\n' + '                      ';
+          var dataTemplate = '\n' + '                      {' + '\n' + '                        ' + '"' + 'where' + '"' + ': {' + '\n' + '                          ' + '"' + 'user' + '"' + ': ' + '"' + invite.from.firstName + ' ' + invite.from.lastName + '"' + '\n' + '                        },' + '\n' + '                        ' + '"' + 'data' + '"' + ': {' + '\n' + '                          ' + '"' + 'title' + '"' + ': ' + '"' + 'Summon' + '"' + ',' + '\n' + '                          ' + '"' + 'alert' + '"' + ': ' + '"' + 'Invite status update!' + '"' + ',' + '\n' + '                          ' + '"' + 'uri' + '"' + ' :' + '"' + 'summon://prt2121.summon.com/status' + '"' + ',' + '\n' + '                          ' + '"' + 'invite' + '"' + ': ' + '"' + 'inviteData' + '"' + '\n' + '                        }' + '\n' + '                      }' + '\n' + '                      ';
           placeholder.setChild_5f0h2k$(Kotlin.modules['Yested'].net.yested.with_ji1yox$(new Kotlin.modules['Yested'].net.yested.Div(), _.prat.f_20(invite, inviteTemplate, resourceUrl, position, dataTemplate, pushUrl)));
         };
       },
@@ -332,7 +332,7 @@
               var item = tmp$0[tmp$2];
               destination.add_za3rmp$(item.toString());
             }
-            this.clazz = Kotlin.modules['stdlib'].kotlin.joinToString_sdec0h$(destination, ' ');
+            this.clazz = Kotlin.modules['stdlib'].kotlin.collections.joinToString_sdec0h$(destination, ' ');
             init.call(this);
           };
         }
@@ -514,7 +514,7 @@
         _.prat.page_s0l1ol$('page', void 0, _.prat.main_kand9s$f_1(navbar, divContainer));
       },
       extractId_61zpoe$: function (str) {
-        return Kotlin.modules['stdlib'].kotlin.isNullOrBlank_gw00vq$(str) || !Kotlin.modules['stdlib'].kotlin.contains_kzp0od$(str, 'id=') ? '' : Kotlin.modules['stdlib'].kotlin.split_l2gz7$(str, ['id=']).get_za3lpa$(1);
+        return Kotlin.modules['stdlib'].kotlin.text.isNullOrBlank_gw00vq$(str) || !Kotlin.modules['stdlib'].kotlin.text.contains_kzp0od$(str, 'id=') ? '' : Kotlin.modules['stdlib'].kotlin.text.split_l2gz7$(str, ['id=']).get_za3lpa$(1);
       },
       ContentDiv: Kotlin.createClass(function () {
         return [Kotlin.modules['Yested'].net.yested.Component];
