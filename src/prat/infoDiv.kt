@@ -32,11 +32,13 @@ fun createInfoDiv(url: String): Div {
 
   //// http://demo.yested.net/#ajax
   ajaxGet<Invite>(url) {
-    invite ->
     // now invite is not type 'Invite'
+    invite ->
     println("id ${invite._id}")
     val resourceUrl = "https://intense-waters-9652.herokuapp.com/invites/${invite._id}"
     val pushUrl = "https://api.parse.com/1/push"
+    // This is ugly but now invite is not type 'Invite'
+    // TODO:
     val inviteTemplate = """
                       {
                         "from": {
@@ -65,6 +67,7 @@ fun createInfoDiv(url: String): Div {
                         "data": {
                           "title": "Summon",
                           "alert": "Invite status update!",
+                          "uri" :"summon://prt2121.summon.com/status",
                           "invite": "inviteData"
                         }
                       }
